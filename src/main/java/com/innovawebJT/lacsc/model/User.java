@@ -26,5 +26,6 @@ public class User {
 	private Institution institution;
 
 	//private String referencePay;
-	//private String referenceFile;
+	//? Should use File or String type
+	//private File referenceFile;
 }
