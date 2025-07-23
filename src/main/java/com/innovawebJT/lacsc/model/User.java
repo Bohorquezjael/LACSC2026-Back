@@ -2,12 +2,19 @@ package com.innovawebJT.lacsc.model;
 
 import com.innovawebJT.lacsc.enums.Category;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name="Users")
 public class User {
 
@@ -22,10 +29,9 @@ public class User {
 	@Enumerated(EnumType.STRING)
 	@Column(name = "category")
 	private Category category;
+	@CreationTimestamp
+	private LocalDateTime createdAt;
 	@Embedded
 	private Institution institution;
-
-	//private String referencePay;
-	//? Should use File or String type
-	//private File referenceFile;
+	private String referencePaymentFile;
 }
