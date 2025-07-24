@@ -2,10 +2,13 @@ package com.innovawebJT.lacsc.service.imp;
 
 import com.innovawebJT.lacsc.dto.UserCreateDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
+import com.innovawebJT.lacsc.exception.UserNotFoundException;
 import com.innovawebJT.lacsc.model.User;
 import com.innovawebJT.lacsc.repository.UserRepository;
 import com.innovawebJT.lacsc.service.IUserService;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -39,5 +42,17 @@ public class UserService implements IUserService {
 				.badgeName(savedUser.getBadgeName())
 				.build();
 	}
+
+	@Override
+	public User get(Long id) {
+		return repository.findById(id)
+						.orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+	}
+
+	@Override
+	public Page<UserResponseDTO> getAll(Pageable pageable) {
+		return repository.findAllUsersSummary(pageable);
+	}
+
 
 }
