@@ -13,4 +13,8 @@ public interface IUserService {
 	User get(Long id);
 
 	Page<UserResponseDTO> getAll(Pageable pageable);
+
+	UserResponseDTO getByEmail(String email);
+
+	boolean deleteUser(Long id);
 }

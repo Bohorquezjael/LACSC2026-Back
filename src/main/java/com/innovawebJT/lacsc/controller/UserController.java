@@ -14,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -30,14 +29,10 @@ public class UserController {
 		return ResponseEntity.created(path).body(user);
 	}
 
-	@Operation(
-			summary = "Retrieve a user by ID",
-			description = "Use this endpoint only for accessing existing users by their unique ID. NOT intended for search or filtering operations."
-	)
+	@Operation(summary = "Retrieve a user by ID", description = "Use this endpoint only for accessing existing users by their unique ID. NOT intended for search or filtering operations.")
 	@GetMapping("/{id}")
 	public ResponseEntity<User> getUser(
-			@Parameter(description = "ID of the user to retrieve", example = "123", required = true)
-			@PathVariable Long id) {
+			@Parameter(description = "ID of the user to retrieve", example = "123", required = true) @PathVariable Long id) {
 		return ResponseEntity.ok(service.get(id));
 	}
 
@@ -46,7 +41,20 @@ public class UserController {
 		return ResponseEntity.ok(service.getAll(pageable));
 	}
 
-	public ResponseEntity<UserResponseDTO> getByEmail(String email){
-		return null;
+	@GetMapping
+	public ResponseEntity<UserResponseDTO> getByEmail(@RequestParam(required = false) String email) {
+		return ResponseEntity.ok(service.getByEmail(email));
 	}
+
+	@DeleteMapping("/{id}")
+	public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+		if (service.deleteUser(id)) {
+			return ResponseEntity.ok().build();
+		}else {
+			return ResponseEntity.notFound().build();
+		}
+	}
+
+
+	
 }

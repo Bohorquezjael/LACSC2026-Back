@@ -54,5 +54,26 @@ public class UserService implements IUserService {
 		return repository.findAllUsersSummary(pageable);
 	}
 
+	@Override
+	public UserResponseDTO getByEmail(String email) {
+		User user = repository.findByEmail(email)
+				.orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+		return UserResponseDTO.builder()
+				.id(user.getId())
+				.name(user.getName())
+				.surname(user.getSurname())
+				.email(user.getEmail())
+				.badgeName(user.getBadgeName())
+				.build();
+	}
 
+	@Override
+	public boolean deleteUser(Long id) {
+		if (repository.existsById(id)) {
+			repository.deleteById(id);
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

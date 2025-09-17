@@ -2,7 +2,6 @@ package com.innovawebJT.lacsc.repository;
 
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
 import com.innovawebJT.lacsc.model.User;
-import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,4 +26,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 	@Query("SELECT new com.innovawebJT.lacsc.dto.UserResponseDTO(u.id, u.name, u.surname, u.email, u.badgeName) FROM User u")
 	Page<UserResponseDTO> findAllUsersSummary(Pageable pageable);
+
+	void delete(User user);
 }

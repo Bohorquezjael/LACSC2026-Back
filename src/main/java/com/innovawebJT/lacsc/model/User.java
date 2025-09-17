@@ -24,7 +24,7 @@ public class User {
 	private String name;
 	private String surname;
 	private String email;
-	//private String password;
+	private String password;
 	private String badgeName;
 	@Enumerated(EnumType.STRING)
 	@Column(name = "category")
