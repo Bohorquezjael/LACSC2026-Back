@@ -1,9 +1,6 @@
 services:
   keycloak:
     image: quay.io/keycloak/keycloak:latest
-    # Set admin credentials via environment variables. 
-    # Create a .env file with KEYCLOAK_ADMIN_USERNAME and KEYCLOAK_ADMIN_PASSWORD.
-    # Never use default credentials in non-local environments.
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
