@@ -43,6 +43,9 @@ public class UserController {
 
 	@GetMapping
 	public ResponseEntity<UserResponseDTO> getByEmail(@RequestParam(required = false) String email) {
+		if (email == null) {
+			return ResponseEntity.badRequest().build();
+		}
 		return ResponseEntity.ok(service.getByEmail(email));
 	}
 

@@ -27,9 +27,7 @@ public class UserService implements IUserService {
 				.category(dto.category())
 				.institution(dto.institution())
 				.build();
-		if(repository.existsByEmail(user.getEmail()) || repository.existsByEmailAndNameAndSurnameAndBadgeName(
-				user.getEmail(), user.getName(), user.getSurname(), user.getBadgeName()
-		)){
+		if(repository.existsByEmail(user.getEmail())){
 			throw new RuntimeException("User with name " + dto.name() + " already exists");
 		}
 		User savedUser = repository.save(user);
