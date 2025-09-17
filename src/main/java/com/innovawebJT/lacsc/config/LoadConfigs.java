@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class LoadConfigs {
 
-    @PostConstruct
     public static void init() {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
