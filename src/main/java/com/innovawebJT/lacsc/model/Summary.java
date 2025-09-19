@@ -30,10 +30,11 @@ public class Summary {
     private boolean isVerified;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     private User author;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    private List<User> coAuthors;
+    @OneToMany(mappedBy = "summary", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<CoAuthor> coAuthors;
 
     private LocalDate date;
 }

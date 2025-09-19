@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Data
@@ -21,17 +22,31 @@ public class User {
 	@Id
 	@GeneratedValue(strategy =  GenerationType.IDENTITY)
 	private Long id;
+
 	private String name;
+
 	private String surname;
+
 	private String email;
+
 	private String password;
+
 	private String badgeName;
+
 	@Enumerated(EnumType.STRING)
-	@Column(name = "category")
 	private Category category;
+
 	@CreationTimestamp
 	private LocalDateTime createdAt;
+
 	@Embedded
 	private Institution institution;
+
 	private String referencePaymentFile;
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "author")
+    private List<Summary> summaryAsAuthor;
+
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "coAuthors")
+    private List<Summary> summaryAsCoauthor;
 }
