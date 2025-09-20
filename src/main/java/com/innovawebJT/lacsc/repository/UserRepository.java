@@ -1,7 +1,6 @@
 package com.innovawebJT.lacsc.repository;
 
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
-import com.innovawebJT.lacsc.model.Summary;
 import com.innovawebJT.lacsc.model.User;
 
 import org.springframework.data.domain.Page;

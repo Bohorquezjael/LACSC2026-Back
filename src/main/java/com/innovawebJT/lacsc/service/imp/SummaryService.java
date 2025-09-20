@@ -38,4 +38,10 @@ public class SummaryService implements ISummaryService {
     public List<Summary> getSummariesByAuthorId(Long authorId) {
         return summaryRepository.getSummaryByAuthorId(authorId);
     }
+
+    public Summary createSummary(Summary summary, Long authorId) {
+        Summary summaryCreated = summary;
+        summaryCreated.setId(authorId);
+        return summaryRepository.save(summaryCreated);
+    }
 }

@@ -72,4 +72,11 @@ public class UserController {
 				.map(ResponseEntity::ok)
 				.orElseGet(() -> ResponseEntity.noContent().build());
 	}
+
+	@PostMapping("/{id}/summaries")
+	public ResponseEntity<Summary> createSummary(@RequestBody Summary summary, @PathVariable Long authorId){
+		Summary summCreated = summaryService.createSummary(summary, authorId);
+		return ResponseEntity.created(URI.create("/{authorId}/summaries/" + summCreated.getId()))
+				.body(summCreated);
+	}
 }

@@ -17,4 +17,6 @@ public interface ISummaryService {
     Page<Summary> getAllSummaries(Pageable pageable);
 
     List<Summary> getSummariesByAuthorId(Long authorId);
+
+    Summary createSummary(Summary summary, Long authorId);
 }
