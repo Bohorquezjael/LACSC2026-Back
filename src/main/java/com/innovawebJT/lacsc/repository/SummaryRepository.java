@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SummaryRepository extends JpaRepository<Summary, Long> {
 
-    public List<Summary> getSummaryByAuthorId(Long authorId);
+    List<Summary> getSummaryByAuthorId(Long authorId);
 }
