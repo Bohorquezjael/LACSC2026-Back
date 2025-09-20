@@ -25,13 +25,11 @@ public class SummaryService implements ISummaryService {
 
     @Override
     public Optional<Summary> getById(Long id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getById'");
+        return summaryRepository.findById(id);
     }
 
     @Override
     public void deleteSummary(Long id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteSummary'");
+        summaryRepository.deleteById(id);
     }
 }
