@@ -47,6 +47,4 @@ public class User {
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "author")
     private List<Summary> summaryAsAuthor;
 
-    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "coAuthors")
-    private List<Summary> summaryAsCoauthor;
 }
