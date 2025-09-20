@@ -29,7 +29,7 @@ public class CoAuthor {
     @JoinColumn(name = "summary_id")
     private Summary summary;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 }
