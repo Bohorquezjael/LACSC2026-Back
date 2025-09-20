@@ -1,5 +1,6 @@
 package com.innovawebJT.lacsc.service.imp;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -31,5 +32,10 @@ public class SummaryService implements ISummaryService {
     @Override
     public void deleteSummary(Long id) {
         summaryRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Summary> getSummariesByAuthorId(Long authorId) {
+        return summaryRepository.getSummaryByAuthorId(authorId);
     }
 }
