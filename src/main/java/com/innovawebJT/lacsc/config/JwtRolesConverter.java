@@ -56,7 +56,7 @@ public class JwtRolesConverter implements Converter<Jwt, AbstractAuthenticationT
         }
         resourceAccess = jwt.getClaim("resource_access");
 
-        if(resourceAccess.get(resourceId) == null){
+        if (resourceAccess.get(resourceId) == null) {
             return Stream.<GrantedAuthority>of().toList();
         }
         resource = (Map<String, Object>) resourceAccess.get(resourceId);
