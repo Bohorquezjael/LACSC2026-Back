@@ -4,10 +4,19 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HOSTNAME: "https://bookish-space-bassoon-w5wjrrqp7v7h59jw-8088.app.github.dev"
+      KC_PROXY_ADDRESS_FORWARDING: "true"
+    volumes:
+      - ./keycloak-data:/opt/keycloak/data
     ports:
       - "8088:8080"
     command:
       - start-dev
+  
+volumes:
+  keycloak-data:
 
   # app:
   #   build: .

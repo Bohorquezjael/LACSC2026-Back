@@ -19,7 +19,7 @@ public class DataSeeder {
 	@Bean
 	CommandLineRunner loadFakeUsers(UserRepository repository) {
 		return args -> {
-			Faker faker = new Faker(new Locale("en"));
+			Faker faker = new Faker(Locale.ENGLISH);
 			for (int i = 0; i < 400; i++) {
 				User user = User.builder()
 						.name(faker.name().firstName())
