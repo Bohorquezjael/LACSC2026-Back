@@ -40,7 +40,7 @@ public class JwtRolesConverter implements Converter<Jwt, AbstractAuthenticationT
 
     private String getPrincipalClaimName(Jwt jwt) {
         String claimName = JwtClaimNames.SUB;
-        if(principalAttribute != null){
+        if (principalAttribute != null) {
             claimName = principalAttribute;
         }
         return jwt.getClaim(claimName);
