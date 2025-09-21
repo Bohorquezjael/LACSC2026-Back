@@ -4,13 +4,12 @@ import com.innovawebJT.lacsc.dto.UserCreateDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
 import com.innovawebJT.lacsc.model.Summary;
 import com.innovawebJT.lacsc.model.User;
-import com.innovawebJT.lacsc.service.imp.SummaryService;
-import com.innovawebJT.lacsc.service.imp.UserService;
+import com.innovawebJT.lacsc.service.ISummaryService;
+import com.innovawebJT.lacsc.service.IUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.AllArgsConstructor;
 
-import org.apache.catalina.connector.Response;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -26,8 +25,8 @@ import java.util.Optional;
 @AllArgsConstructor
 public class UserController {
 
-	private final UserService service;
-	private final SummaryService summaryService;
+	private final IUserService service;
+	private final ISummaryService summaryService;
 
 	@PostMapping
 	public ResponseEntity<UserResponseDTO> createUser(@RequestBody UserCreateDTO dto) {
@@ -74,9 +73,9 @@ public class UserController {
 	}
 
 	@PostMapping("/{id}/summaries")
-	public ResponseEntity<Summary> createSummary(@RequestBody Summary summary, @PathVariable Long authorId){
-		Summary summCreated = summaryService.createSummary(summary, authorId);
-		return ResponseEntity.created(URI.create("/{authorId}/summaries/" + summCreated.getId()))
+	public ResponseEntity<Summary> createSummary(@RequestBody Summary summary, @PathVariable Long id){
+		Summary summCreated = summaryService.createSummary(summary, id);
+		return ResponseEntity.created(URI.create("/users/" + id + "/summaries/" + summCreated.getId()))
 				.body(summCreated);
 	}
 }
