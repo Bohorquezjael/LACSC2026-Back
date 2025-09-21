@@ -8,10 +8,15 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+
+    private final JwtRolesConverter jwtRolesConverter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
@@ -19,7 +24,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(http -> http.anyRequest().authenticated())
                 .oauth2ResourceServer(oauth -> {
-                    oauth.jwt(jwt -> {});
+                    oauth.jwt(jwt -> {jwt.jwtAuthenticationConverter(jwtRolesConverter);});
                 })
                 .sessionManagement(sessionMg -> sessionMg.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .build();

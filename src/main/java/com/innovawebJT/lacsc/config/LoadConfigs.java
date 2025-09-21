@@ -16,6 +16,7 @@ public class LoadConfigs {
         System.setProperty("SPRING_PASS", dotenv.get("SPRING_PASS"));
         System.setProperty("KEYCLOAK_ISSUER_URI", dotenv.get("KEYCLOAK_ISSUER_URI"));
         System.setProperty("KEYCLOAK_JWK_SET_URI", dotenv.get("KEYCLOAK_JWK_SET_URI"));
+        System.setProperty("KEYCLOAK_CLIENT_ID", dotenv.get("KEYCLOAK_CLIENT_ID"));
 
         System.out.println("✅ DB_URL = " + System.getProperty("DB_URL_DEV"));
     }
