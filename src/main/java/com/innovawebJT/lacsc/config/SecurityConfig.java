@@ -24,7 +24,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(http -> http.anyRequest().authenticated())
                 .oauth2ResourceServer(oauth -> {
-                    oauth.jwt(jwt -> {jwt.jwtAuthenticationConverter(jwtRolesConverter);});
+                    oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtRolesConverter));
                 })
                 .sessionManagement(sessionMg -> sessionMg.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .build();
