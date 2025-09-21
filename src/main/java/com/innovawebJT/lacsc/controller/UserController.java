@@ -2,11 +2,14 @@ package com.innovawebJT.lacsc.controller;
 
 import com.innovawebJT.lacsc.dto.UserCreateDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
+import com.innovawebJT.lacsc.model.Summary;
 import com.innovawebJT.lacsc.model.User;
-import com.innovawebJT.lacsc.service.imp.UserService;
+import com.innovawebJT.lacsc.service.ISummaryService;
+import com.innovawebJT.lacsc.service.IUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.AllArgsConstructor;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -14,13 +17,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/users")
 @AllArgsConstructor
 public class UserController {
 
-	private final UserService service;
+	private final IUserService service;
+	private final ISummaryService summaryService;
 
 	@PostMapping
 	public ResponseEntity<UserResponseDTO> createUser(@RequestBody UserCreateDTO dto) {
@@ -56,5 +62,20 @@ public class UserController {
 		}else {
 			return ResponseEntity.notFound().build();
 		}
+	}
+
+	@GetMapping("/{id}/summaries")
+	public ResponseEntity<List<Summary>> getSummaries(@PathVariable Long id){
+		return Optional.ofNullable(summaryService.getSummariesByAuthorId(id))
+				.filter(summaries -> !summaries.isEmpty())
+				.map(ResponseEntity::ok)
+				.orElseGet(() -> ResponseEntity.noContent().build());
+	}
+
+	@PostMapping("/{id}/summaries")
+	public ResponseEntity<Summary> createSummary(@RequestBody Summary summary, @PathVariable Long id){
+		Summary summCreated = summaryService.createSummary(summary, id);
+		return ResponseEntity.created(URI.create("/users/" + id + "/summaries/" + summCreated.getId()))
+				.body(summCreated);
 	}
 }

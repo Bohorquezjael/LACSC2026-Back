@@ -27,24 +27,34 @@ public class User {
 
 	private String surname;
 
+	private byte age;
+
+	private char gender;
+
 	private String email;
+
+	private String cellphone;
+
+	private String country;
+	
+	@Enumerated(EnumType.STRING)
+	private Category category;
 
 	private String password;
 
 	private String badgeName;
 
-	@Enumerated(EnumType.STRING)
-	private Category category;
-
-	@CreationTimestamp
-	private LocalDateTime createdAt;
-
+	@OneToOne(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL) 
+	private EmergencyContact emergencyContact;
+	
 	@Embedded
 	private Institution institution;
-
+	
 	private String referencePaymentFile;
-
+	
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "author")
     private List<Summary> summaryAsAuthor;
-
+	
+	@CreationTimestamp
+	private LocalDateTime createdAt;
 }
