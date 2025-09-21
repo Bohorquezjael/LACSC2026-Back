@@ -43,8 +43,7 @@ public class SummaryService implements ISummaryService {
 
     @Override
     public Summary createSummary(Summary summary, Long authorId) {
-        Summary summaryCreated = summary;
-        summaryCreated.setAuthor(userRepository.findById(authorId).orElse(null));
-        return summaryRepository.save(summaryCreated);
+        summary.setAuthor(userRepository.findById(authorId).orElse(null));
+        return summaryRepository.save(summary);
     }
 }
