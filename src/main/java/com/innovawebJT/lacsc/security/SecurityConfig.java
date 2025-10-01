@@ -1,4 +1,4 @@
-package com.innovawebJT.lacsc.config;
+package com.innovawebJT.lacsc.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,7 +28,7 @@ public class SecurityConfig {
         @Order(1)
         public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
                 return httpSecurity
-                                .securityMatcher(new AntPathRequestMatcher("/api/**"))
+                                .securityMatcher("/api/**")
                                 .csrf(AbstractHttpConfigurer::disable)
                                 .authorizeHttpRequests(http -> http.anyRequest().authenticated())
                                 .oauth2ResourceServer(oauth -> oauth

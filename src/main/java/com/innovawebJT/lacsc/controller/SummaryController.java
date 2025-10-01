@@ -16,7 +16,7 @@ import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 @RestController
-@RequestMapping("/summaries")
+@RequestMapping("/api/summaries")
 public class SummaryController {
     
     private final ISummaryService summaryService;
