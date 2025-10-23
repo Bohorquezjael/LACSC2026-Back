@@ -10,7 +10,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import lombok.RequiredArgsConstructor;
 
@@ -38,17 +37,29 @@ public class SecurityConfig {
                                 .build();
         }
 
+@Bean
+@Order(2)
+public SecurityFilterChain swaggerSecurityFilterChain(HttpSecurity httpSecurity) throws Exception {
+        return httpSecurity
+                        .securityMatcher("/swagger-ui/**", "/swagger-ui.html",
+                                        "/v3/api-docs/**", "/swagger-resources/**",
+                                        "/webjars/**")
+                        .csrf(AbstractHttpConfigurer::disable)
+                        .authorizeHttpRequests(http -> http.anyRequest().authenticated())
+                        .oauth2Login(withDefaults())
+                        .build();
+}
+
         @Bean
-        @Order(2)
+        @Order(3)
         public SecurityFilterChain devSecurityFilterChain(HttpSecurity httpSecurity) throws Exception {
                 return httpSecurity
                                 .csrf(AbstractHttpConfigurer::disable)
                                 .headers(headers -> headers
                                                 .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
                                 .authorizeHttpRequests(http -> http
-                                                .requestMatchers("/h2-console/**", "/swagger-ui/**", "/swagger-ui.html",
-                                                                "/v3/api-docs/**")
-                                                .authenticated())
+                                                .requestMatchers("/h2-console/**").authenticated()
+                                                .anyRequest().authenticated())
                                 .oauth2Login(withDefaults())
                                 .logout(logout -> logout
                                                 .logoutSuccessUrl("/")
