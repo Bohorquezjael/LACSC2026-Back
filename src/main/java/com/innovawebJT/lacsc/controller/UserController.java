@@ -1,6 +1,6 @@
 package com.innovawebJT.lacsc.controller;
 
-import com.innovawebJT.lacsc.dto.UserCreateDTO;
+import com.innovawebJT.lacsc.dto.RegisterDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
 import com.innovawebJT.lacsc.model.Summary;
 import com.innovawebJT.lacsc.model.User;
@@ -29,7 +29,7 @@ public class UserController {
 	private final ISummaryService summaryService;
 
 	@PostMapping
-	public ResponseEntity<UserResponseDTO> createUser(@RequestBody UserCreateDTO dto) {
+	public ResponseEntity<UserResponseDTO> createUser(@RequestBody RegisterDTO dto) {
 		UserResponseDTO user = service.create(dto);
 		URI path = URI.create("/users/" + user.id());
 		return ResponseEntity.created(path).body(user);

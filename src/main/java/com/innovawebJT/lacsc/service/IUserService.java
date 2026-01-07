@@ -1,6 +1,6 @@
 package com.innovawebJT.lacsc.service;
 
-import com.innovawebJT.lacsc.dto.UserCreateDTO;
+import com.innovawebJT.lacsc.dto.UserProfileDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
 import com.innovawebJT.lacsc.model.User;
 import org.springframework.data.domain.Page;
@@ -8,13 +8,13 @@ import org.springframework.data.domain.Pageable;
 
 public interface IUserService {
 
-	UserResponseDTO create(UserCreateDTO dto);
+    User getOrCreateProfile(String keycloakId);
 
-	User get(Long id);
+    UserResponseDTO getProfile(String keycloakId);
 
-	Page<UserResponseDTO> getAll(Pageable pageable);
+    void createProfile(String keycloakId, UserProfileDTO dto);
 
-	UserResponseDTO getByEmail(String email);
+    Page<UserResponseDTO> getAll(Pageable pageable);
 
-	boolean deleteUser(Long id);
+    boolean deleteUser(Long id);
 }

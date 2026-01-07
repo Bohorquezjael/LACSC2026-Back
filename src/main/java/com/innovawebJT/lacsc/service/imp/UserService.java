@@ -1,6 +1,6 @@
 package com.innovawebJT.lacsc.service.imp;
 
-import com.innovawebJT.lacsc.dto.UserCreateDTO;
+import com.innovawebJT.lacsc.dto.RegisterDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
 import com.innovawebJT.lacsc.exception.UserNotFoundException;
 import com.innovawebJT.lacsc.model.User;
@@ -18,7 +18,7 @@ public class UserService implements IUserService {
 	private final UserRepository repository;
 
 	@Override
-	public UserResponseDTO create(UserCreateDTO dto) {
+	public UserResponseDTO create(RegisterDTO dto) {
 		User user = User.builder()
 				.name(dto.name())
 				.surname(dto.surname())
@@ -74,4 +74,17 @@ public class UserService implements IUserService {
 			return false;
 		}
 	}
+
+	public void createProfile(String keycloakId, RegisterDTO dto) {
+    User user = User.builder()
+            .keycloakId(keycloakId)
+            .badgeName(dto.getBadgeName())
+            .country(dto.getCountry())
+            .category(dto.getCategory())
+            .gender(dto.getGender())
+            .build();
+
+    repository.save(user);
+}
+
 }

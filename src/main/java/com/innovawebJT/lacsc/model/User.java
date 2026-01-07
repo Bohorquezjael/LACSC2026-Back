@@ -40,7 +40,9 @@ public class User {
 	@Enumerated(EnumType.STRING)
 	private Category category;
 
-	private String password;
+	//private String password;
+	@Column(nullable = false, unique = true)
+    private String keycloakId;
 
 	private String badgeName;
 
