@@ -1,90 +1,114 @@
 package com.innovawebJT.lacsc.service.imp;
 
-import com.innovawebJT.lacsc.dto.RegisterDTO;
+import com.innovawebJT.lacsc.dto.UserProfileDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
 import com.innovawebJT.lacsc.exception.UserNotFoundException;
+import com.innovawebJT.lacsc.model.Summary;
 import com.innovawebJT.lacsc.model.User;
 import com.innovawebJT.lacsc.repository.UserRepository;
+import com.innovawebJT.lacsc.security.SecurityUtils;
+import com.innovawebJT.lacsc.service.ISummaryService;
 import com.innovawebJT.lacsc.service.IUserService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @AllArgsConstructor
 public class UserService implements IUserService {
 
-	private final UserRepository repository;
+    private final UserRepository repository;
+    private final ISummaryService summaryRepository;
 
-	@Override
-	public UserResponseDTO create(RegisterDTO dto) {
-		User user = User.builder()
-				.name(dto.name())
-				.surname(dto.surname())
-				.email(dto.email())
-				.badgeName(dto.badgeName())
-				.category(dto.category())
-				.institution(dto.institution())
-				.build();
-		if(repository.existsByEmail(user.getEmail())){
-			throw new RuntimeException("User with name " + dto.name() + " already exists");
-		}
-		User savedUser = repository.save(user);
+    @Override
+    public UserResponseDTO createOrUpdateProfile(String keycloakId, UserProfileDTO dto) {
 
-		return UserResponseDTO.builder()
-				.id(savedUser.getId())
-				.name(savedUser.getName())
-				.surname(savedUser.getSurname())
-				.email(savedUser.getEmail())
-				.badgeName(savedUser.getBadgeName())
-				.build();
-	}
+    User user = repository.findByKeycloakId(keycloakId)
+            .orElseGet(() -> {
+                User u = new User();
+                u.setKeycloakId(keycloakId);
+                return u;
+            });
 
-	@Override
-	public User get(Long id) {
-		return repository.findById(id)
-						.orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
-	}
+    user.setBadgeName(dto.badgeName());
+    user.setCategory(dto.category());
+    user.setInstitution(dto.institution());
 
-	@Override
-	public Page<UserResponseDTO> getAll(Pageable pageable) {
-		return repository.findAllUsersSummary(pageable);
-	}
+    User saved = repository.save(user);
 
-	@Override
-	public UserResponseDTO getByEmail(String email) {
-		User user = repository.findByEmail(email)
-				.orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
-		return UserResponseDTO.builder()
-				.id(user.getId())
-				.name(user.getName())
-				.surname(user.getSurname())
-				.email(user.getEmail())
-				.badgeName(user.getBadgeName())
-				.build();
-	}
-
-	@Override
-	public boolean deleteUser(Long id) {
-		if (repository.existsById(id)) {
-			repository.deleteById(id);
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	public void createProfile(String keycloakId, RegisterDTO dto) {
-    User user = User.builder()
-            .keycloakId(keycloakId)
-            .badgeName(dto.getBadgeName())
-            .country(dto.getCountry())
-            .category(dto.getCategory())
-            .gender(dto.getGender())
+    return UserResponseDTO.builder()
+            .id(saved.getId())
+            .badgeName(saved.getBadgeName())
+            .category(saved.getCategory())
             .build();
-
-    repository.save(user);
 }
 
+
+
+    @Override
+public UserResponseDTO getProfile(String keycloakId) {
+    User user = repository.findByKeycloakId(keycloakId)
+            .orElseThrow(() -> new UserNotFoundException("Profile not found"));
+
+    return UserResponseDTO.builder()
+            .id(user.getId())
+            .badgeName(user.getBadgeName())
+            .category(user.getCategory())
+            .build();
+}
+
+
+    @Override
+    public Page<UserResponseDTO> getAll(Pageable pageable) {
+        return repository.findAllUsersSummary(pageable);
+    }
+
+    @Override
+    public boolean deleteUser(Long id) {
+        if (repository.existsById(id)) {
+            repository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+public UserResponseDTO getCurrentUser() {
+
+    String keycloakId = SecurityUtils.getKeycloakId();
+
+    User user = repository.findByKeycloakId(keycloakId)
+            .orElseThrow(() -> new UserNotFoundException("Profile not found"));
+
+    return UserResponseDTO.builder()
+            .id(user.getId())
+            .badgeName(user.getBadgeName())
+            .category(user.getCategory())
+            .build();
+}
+
+    /**
+     * @param id
+     * @return
+     */
+    @Override
+    public UserResponseDTO getById(Long id) {
+        return repository.findById(id)
+                .map(this::mapToResponseDTO)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+    }
+
+    private UserResponseDTO mapToResponseDTO(User user) {
+        return UserResponseDTO.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .surname(user.getSurname())
+                .badgeName(user.getBadgeName())
+                .category(user.getCategory())
+                .institution(user.getInstitution())
+                .build();
+    }
 }

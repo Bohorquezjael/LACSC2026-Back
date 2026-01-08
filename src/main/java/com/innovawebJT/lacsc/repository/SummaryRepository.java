@@ -13,5 +13,7 @@ public interface SummaryRepository extends JpaRepository<Summary, Long> {
 
     Optional<Summary> getSummaryById(Long id);
 
+    List<Summary> findByAuthor(Object author);
+
     // List<Summary> getSummariesByCoauthorId(Long coAuthorId); //? name correct??? is possibly, how handle unregistered users??
 }

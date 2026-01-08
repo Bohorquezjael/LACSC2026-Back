@@ -24,6 +24,16 @@ public class SecurityConfig {
         private final JwtRolesConverter jwtRolesConverter;
 
         @Bean
+        @Order(0)
+        public SecurityFilterChain authSecurity(HttpSecurity http) throws Exception {
+                return http
+                                .securityMatcher("/auth/**")
+                                .csrf(AbstractHttpConfigurer::disable)
+                                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                                .build();
+        }
+
+        @Bean
         @Order(1)
         public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
                 return httpSecurity

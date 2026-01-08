@@ -1,6 +1,7 @@
 package com.innovawebJT.lacsc.controller;
 
 import com.innovawebJT.lacsc.dto.RegisterDTO;
+import com.innovawebJT.lacsc.dto.UserProfileDTO;
 import com.innovawebJT.lacsc.service.IUserService;
 import com.innovawebJT.lacsc.service.imp.KeycloakService;
 import lombok.AllArgsConstructor;
@@ -18,17 +19,23 @@ public class AuthController {
     private final IUserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<Void> register(@RequestBody RegisterDTO dto) {
+public ResponseEntity<Void> register(@RequestBody RegisterDTO dto) {
 
-        String keycloakId = keycloakService.createUser(
-                dto.getEmail(),
-                dto.getPassword(),
-                dto.getName(),
-                dto.getSurname()
-        );
+    String keycloakId = keycloakService.createUser(
+            dto.email(),
+            dto.password(),
+            dto.name(),
+            dto.surname()
+    );
 
-        userService.createProfile(keycloakId, dto);
+    UserProfileDTO profileDTO = new UserProfileDTO(
+            dto.badgeName(),
+            dto.category(),
+            dto.institution()
+    );
 
-        return ResponseEntity.ok().build();
-    }
+    userService.createOrUpdateProfile(keycloakId, profileDTO);
+
+    return ResponseEntity.ok().build();
+}
 }
