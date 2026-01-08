@@ -35,7 +35,7 @@ public class DataSeeder {
 								))
 						.build();
 
-				repository.save(user);
+				//repository.save(user);
 			}
 		};
 	}

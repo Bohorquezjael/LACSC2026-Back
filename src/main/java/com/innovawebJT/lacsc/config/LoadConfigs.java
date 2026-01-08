@@ -21,6 +21,7 @@ public class LoadConfigs {
         System.setProperty("SWAGGER_REALM", dotenv.get("SWAGGER_REALM"));
         System.setProperty("SWAGGER_AUTH_URL", dotenv.get("SWAGGER_AUTH_URL"));
         System.setProperty("SWAGGER_TOKEN_URL", dotenv.get("SWAGGER_TOKEN_URL"));
+        System.setProperty("KEYCLOAK_SERVER_URL", dotenv.get("KEYCLOAK_SERVER_URL"));
 
         System.out.println("✅ Variables cargadas desde .env:");
         System.out.println("DB_URL_DEV = " + System.getProperty("DB_URL_DEV"));
