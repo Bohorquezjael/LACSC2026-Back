@@ -34,7 +34,11 @@ public class KeycloakService {
                 .create(user);
 
         if (response.getStatus() != 201) {
-            throw new RuntimeException("Error creating user in Keycloak");
+             String body = response.readEntity(String.class);
+			 throw new RuntimeException(
+                "Error creating user in Keycloak. Status: "
+                + response.getStatus() + " Body: " + body
+			 );
         }
 
         String userId = response.getLocation().getPath().replaceAll(".*/", "");
