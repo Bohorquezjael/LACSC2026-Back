@@ -10,12 +10,14 @@ import com.innovawebJT.lacsc.security.SecurityUtils;
 import com.innovawebJT.lacsc.service.ISummaryService;
 import com.innovawebJT.lacsc.service.IUserService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class UserService implements IUserService {
@@ -32,10 +34,16 @@ public class UserService implements IUserService {
                 u.setKeycloakId(keycloakId);
                 return u;
             });
-
+    user.setName(dto.name());
+    user.setSurname(dto.surname());
     user.setBadgeName(dto.badgeName());
     user.setCategory(dto.category());
     user.setInstitution(dto.institution());
+    user.setCellphone(dto.cellphone());
+    user.setGender(dto.gender());
+    user.setCountry(dto.country());
+    user.setAge(dto.age());
+
 
     User saved = repository.save(user);
 
@@ -79,7 +87,7 @@ public UserResponseDTO getProfile(String keycloakId) {
 public UserResponseDTO getCurrentUser() {
 
     String keycloakId = SecurityUtils.getKeycloakId();
-
+    log.info("User logged in: {}", keycloakId);
     User user = repository.findByKeycloakId(keycloakId)
             .orElseThrow(() -> new UserNotFoundException("Profile not found"));
 

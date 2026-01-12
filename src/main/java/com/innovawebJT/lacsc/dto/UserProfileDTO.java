@@ -6,6 +6,12 @@ import lombok.Builder;
 
 @Builder
 public record UserProfileDTO (
+		String name,
+		String surname,
+		String cellphone,
+		char gender,
+		String country,
+		byte age,
 		String badgeName,
         Category category,
         Institution institution
