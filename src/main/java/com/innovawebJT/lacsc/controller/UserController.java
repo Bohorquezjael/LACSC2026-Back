@@ -1,81 +1,50 @@
 package com.innovawebJT.lacsc.controller;
 
-import com.innovawebJT.lacsc.dto.UserCreateDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
 import com.innovawebJT.lacsc.model.Summary;
-import com.innovawebJT.lacsc.model.User;
 import com.innovawebJT.lacsc.service.ISummaryService;
 import com.innovawebJT.lacsc.service.IUserService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import lombok.AllArgsConstructor;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
 @AllArgsConstructor
 public class UserController {
 
-	private final IUserService service;
-	private final ISummaryService summaryService;
+    private final IUserService userService;
+    private final ISummaryService summaryService;
 
-	@PostMapping
-	public ResponseEntity<UserResponseDTO> createUser(@RequestBody UserCreateDTO dto) {
-		UserResponseDTO user = service.create(dto);
-		URI path = URI.create("/users/" + user.id());
-		return ResponseEntity.created(path).body(user);
-	}
+    // Obtener MI perfil (desde JWT)
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDTO> me() {
+        return ResponseEntity.ok(userService.getCurrentUser());
+    }
 
-	@Operation(summary = "Retrieve a user by ID", description = "Use this endpoint only for accessing existing users by their unique ID. NOT intended for search or filtering operations.")
+    // Obtener resúmenes del usuario autenticado
+    @GetMapping("/me/summaries")
+    public ResponseEntity<List<Summary>> mySummaries() {
+        return ResponseEntity.ok(summaryService.getMySummaries());
+    }
+
+    // Crear resumen como usuario autenticado
+    @PostMapping("/me/summaries")
+    public ResponseEntity<Summary> createSummary(@RequestBody Summary summary) {
+        Summary created = summaryService.createForCurrentUser(summary);
+        return ResponseEntity
+                .created(URI.create("/api/users/me/summaries/" + created.getId()))
+                .body(created);
+    }
+
+	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/{id}")
-	public ResponseEntity<User> getUser(
-			@Parameter(description = "ID of the user to retrieve", example = "123", required = true) @PathVariable Long id) {
-		return ResponseEntity.ok(service.get(id));
+	public ResponseEntity<UserResponseDTO> getUser(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getById(id));
 	}
 
-	@GetMapping("/all")
-	public ResponseEntity<Page<UserResponseDTO>> getAllUsers(@PageableDefault(size = 20) Pageable pageable) {
-		return ResponseEntity.ok(service.getAll(pageable));
-	}
-
-	@GetMapping
-	public ResponseEntity<UserResponseDTO> getByEmail(@RequestParam(required = false) String email) {
-		if (email == null) {
-			return ResponseEntity.badRequest().build();
-		}
-		return ResponseEntity.ok(service.getByEmail(email));
-	}
-
-	@DeleteMapping("/{id}")
-	public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-		if (service.deleteUser(id)) {
-			return ResponseEntity.ok().build();
-		}else {
-			return ResponseEntity.notFound().build();
-		}
-	}
-
-	@GetMapping("/{id}/summaries")
-	public ResponseEntity<List<Summary>> getSummaries(@PathVariable Long id){
-		return Optional.ofNullable(summaryService.getSummariesByAuthorId(id))
-				.filter(summaries -> !summaries.isEmpty())
-				.map(ResponseEntity::ok)
-				.orElseGet(() -> ResponseEntity.noContent().build());
-	}
-
-	@PostMapping("/{id}/summaries")
-	public ResponseEntity<Summary> createSummary(@RequestBody Summary summary, @PathVariable Long id){
-		Summary summCreated = summaryService.createSummary(summary, id);
-		return ResponseEntity.created(URI.create("/users/" + id + "/summaries/" + summCreated.getId()))
-				.body(summCreated);
-	}
 }

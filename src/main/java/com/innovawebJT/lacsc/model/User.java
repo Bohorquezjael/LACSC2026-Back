@@ -16,7 +16,13 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name="Users")
+@Table(
+    name = "users",
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = "keycloak_id"),
+        @UniqueConstraint(columnNames = "badge_name")
+    }
+)
 public class User {
 
 	@Id
@@ -40,8 +46,11 @@ public class User {
 	@Enumerated(EnumType.STRING)
 	private Category category;
 
-	private String password;
+	//private String password;
+	@Column(name = "keycloak_id", nullable = false, unique = true)
+    private String keycloakId;
 
+	@Column(name = "badge_name", unique = true)
 	private String badgeName;
 
 	@OneToOne(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL) 

@@ -1,4 +1,4 @@
-package com.innovawebJT.lacsc.config;
+package com.innovawebJT.lacsc.security;
 
 import java.util.Collection;
 import java.util.Map;

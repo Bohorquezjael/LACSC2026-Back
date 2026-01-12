@@ -3,6 +3,9 @@ package com.innovawebJT.lacsc.service.imp;
 import java.util.List;
 import java.util.Optional;
 
+import com.innovawebJT.lacsc.exception.UserNotFoundException;
+import com.innovawebJT.lacsc.model.User;
+import com.innovawebJT.lacsc.security.SecurityUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -46,4 +49,30 @@ public class SummaryService implements ISummaryService {
         summary.setAuthor(userRepository.findById(authorId).orElse(null));
         return summaryRepository.save(summary);
     }
+
+    @Override
+public Summary createForCurrentUser(Summary summary) {
+
+    String keycloakId = SecurityUtils.getKeycloakId();
+
+    User user = userRepository.findByKeycloakId(keycloakId)
+            .orElseThrow(() -> new UserNotFoundException("Profile not found"));
+
+    summary.setAuthor(user);
+
+    return summaryRepository.save(summary);
+}
+
+
+    @Override
+public List<Summary> getMySummaries() {
+
+    String keycloakId = SecurityUtils.getKeycloakId();
+
+    User user = userRepository.findByKeycloakId(keycloakId)
+            .orElseThrow(() -> new UserNotFoundException("Profile not found"));
+
+    return summaryRepository.findByAuthor(user);
+}
+
 }
