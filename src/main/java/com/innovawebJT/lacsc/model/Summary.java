@@ -1,5 +1,7 @@
 package com.innovawebJT.lacsc.model;
 
+import com.innovawebJT.lacsc.enums.PresentationModality;
+import com.innovawebJT.lacsc.enums.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,20 +28,34 @@ public class Summary {
 
     private String title;
 
-    private String description;
+    private String abstractDescription;
 
-    private String content;
+    @ManyToOne(fetch = FetchType.LAZY)
+    SpecialSessions specialSession;
 
-    private boolean isVerified;
+    PresentationModality presentationModality;
 
+    private boolean isSummaryPaymentVerified;
+
+    // cambiar por la persona que registra el resumen
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User author;
 
+    //! cambiar por una lista de autores tipo persona
     @OneToMany(mappedBy = "summary", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<CoAuthor> coAuthors;
 
-    private LocalDate date;
+    private LocalDate presentationDate;
+
+    private int presentationRoom;
+
+    private Status status;
+
+    //la asignamos conforme la sala etc... unicamente se manda para el correo
+    private String keyAbstract;
+
+    private String referencePaymentFile;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

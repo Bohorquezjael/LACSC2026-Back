@@ -1,6 +1,7 @@
 package com.innovawebJT.lacsc.model;
 
 import com.innovawebJT.lacsc.enums.Category;
+import com.innovawebJT.lacsc.enums.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -60,9 +61,14 @@ public class User {
 	private Institution institution;
 	
 	private String referencePaymentFile;
-	
+
+	private Status status;
+
+	//cambiar por my summaries
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "author")
     private List<Summary> summaryAsAuthor;
+
+	//añadir my courses
 	
 	@CreationTimestamp
 	private LocalDateTime createdAt;

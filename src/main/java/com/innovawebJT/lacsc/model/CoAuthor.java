@@ -17,19 +17,19 @@ public class CoAuthor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
+    private String fullName;
 
-    private String surname;
+    private String institutionName;
 
     private String email;
 
-    private boolean isRegistered;
+    //private boolean isRegistered;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "summary_id")
-    private Summary summary;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "summary_id")
+//    private Summary summary;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "user_id")
+//    private User user;
 }

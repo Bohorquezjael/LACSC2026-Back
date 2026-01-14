@@ -10,10 +10,12 @@ public record UserProfileDTO (
 		String surname,
 		String cellphone,
 		char gender,
+		String email,
 		String country,
 		byte age,
 		String badgeName,
         Category category,
-        Institution institution
+        Institution institution,
+		EmergencyContactDTO emergencyContact
 ){
 }

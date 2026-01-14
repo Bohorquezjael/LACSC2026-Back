@@ -40,6 +40,7 @@ public ResponseEntity<Void> register(@RequestBody RegisterDTO dto) {
             .cellphone(dto.cellphone())
             .gender(dto.gender())
             .country(dto.country())
+            .email(dto.email())
             .build();
 
     userService.createOrUpdateProfile(keycloakId, profile);
