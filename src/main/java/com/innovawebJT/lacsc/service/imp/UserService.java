@@ -1,8 +1,10 @@
 package com.innovawebJT.lacsc.service.imp;
 
+import com.innovawebJT.lacsc.dto.EmergencyContactDTO;
 import com.innovawebJT.lacsc.dto.UserProfileDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
 import com.innovawebJT.lacsc.exception.UserNotFoundException;
+import com.innovawebJT.lacsc.model.EmergencyContact;
 import com.innovawebJT.lacsc.model.Summary;
 import com.innovawebJT.lacsc.model.User;
 import com.innovawebJT.lacsc.repository.UserRepository;
@@ -37,6 +39,7 @@ public class UserService implements IUserService {
     user.setName(dto.name());
     user.setSurname(dto.surname());
     user.setBadgeName(dto.badgeName());
+    user.setEmail(dto.email());
     user.setCategory(dto.category());
     user.setInstitution(dto.institution());
     user.setCellphone(dto.cellphone());
@@ -44,12 +47,26 @@ public class UserService implements IUserService {
     user.setCountry(dto.country());
     user.setAge(dto.age());
 
+    if (dto.emergencyContact() != null) {
+        EmergencyContact contact = EmergencyContact.builder()
+            .name(dto.emergencyContact().fullName())
+            .relationship(dto.emergencyContact().relationship())
+            .cellphone(dto.emergencyContact().phone())
+            .user(user)
+            .build();
+
+        user.setEmergencyContact(contact);
+    }
 
     User saved = repository.save(user);
 
     return UserResponseDTO.builder()
             .id(saved.getId())
-            .badgeName(saved.getBadgeName())
+            .name(saved.getName())
+            .surname(saved.getSurname())
+            .email(saved.getEmail())
+            .status(saved.getStatus())
+            .institution(saved.getInstitution())
             .category(saved.getCategory())
             .build();
 }
@@ -63,7 +80,6 @@ public UserResponseDTO getProfile(String keycloakId) {
 
     return UserResponseDTO.builder()
             .id(user.getId())
-            .badgeName(user.getBadgeName())
             .category(user.getCategory())
             .build();
 }
@@ -71,7 +87,7 @@ public UserResponseDTO getProfile(String keycloakId) {
 
     @Override
     public Page<UserResponseDTO> getAll(Pageable pageable) {
-        return repository.findAllUsersSummary(pageable);
+        return repository.findAllUsers(pageable);
     }
 
     @Override
@@ -84,17 +100,31 @@ public UserResponseDTO getProfile(String keycloakId) {
     }
 
     @Override
-public UserResponseDTO getCurrentUser() {
+public UserProfileDTO getCurrentUser() {
 
     String keycloakId = SecurityUtils.getKeycloakId();
     log.info("User logged in: {}", keycloakId);
     User user = repository.findByKeycloakId(keycloakId)
             .orElseThrow(() -> new UserNotFoundException("Profile not found"));
 
-    return UserResponseDTO.builder()
-            .id(user.getId())
+    return UserProfileDTO.builder()
+            .name(user.getName())
+            .surname(user.getSurname())
             .badgeName(user.getBadgeName())
+            .cellphone(user.getCellphone())
+            .gender(user.getGender())
+            .email(user.getEmail())
+            .country(user.getCountry())
             .category(user.getCategory())
+            .institution(user.getInstitution())
+            .emergencyContact(
+                    EmergencyContactDTO.builder()
+                            .fullName(user.getEmergencyContact().getName())
+                            .relationship(user.getEmergencyContact().getRelationship())
+                            .phone(user.getEmergencyContact().getCellphone())
+                            .build()
+            )
+            .status(user.getStatus())
             .build();
 }
 
@@ -114,9 +144,10 @@ public UserResponseDTO getCurrentUser() {
                 .id(user.getId())
                 .name(user.getName())
                 .surname(user.getSurname())
-                .badgeName(user.getBadgeName())
+                .email(user.getEmail())
                 .category(user.getCategory())
                 .institution(user.getInstitution())
+                .status(user.getStatus())
                 .build();
     }
 }

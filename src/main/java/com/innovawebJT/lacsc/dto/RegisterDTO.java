@@ -1,6 +1,7 @@
 package com.innovawebJT.lacsc.dto;
 
 import com.innovawebJT.lacsc.enums.Category;
+import com.innovawebJT.lacsc.model.EmergencyContact;
 import com.innovawebJT.lacsc.model.Institution;
 import lombok.Builder;
 
@@ -16,6 +17,7 @@ public record RegisterDTO(String name,
                           char gender,
                           String cellphone,
                           String country,
-                          String password
+                          String password,
+                          EmergencyContact emergencyContact
 							) {
 }

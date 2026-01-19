@@ -1,6 +1,7 @@
 package com.innovawebJT.lacsc.dto;
 
 import com.innovawebJT.lacsc.enums.Category;
+import com.innovawebJT.lacsc.enums.Status;
 import com.innovawebJT.lacsc.model.Institution;
 import lombok.Builder;
 
@@ -10,10 +11,13 @@ public record UserProfileDTO (
 		String surname,
 		String cellphone,
 		char gender,
+		String email,
 		String country,
 		byte age,
 		String badgeName,
         Category category,
-        Institution institution
+        Institution institution,
+		EmergencyContactDTO emergencyContact,
+		Status status
 ){
 }

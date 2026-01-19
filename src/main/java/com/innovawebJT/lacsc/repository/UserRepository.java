@@ -22,11 +22,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
             u.id,
             u.name,
             u.surname,
-            u.badgeName,
+            u.email,
             u.category,
-            u.institution
+            u.institution,
+            u.status
         )
         FROM User u
     """)
-    Page<UserResponseDTO> findAllUsersSummary(Pageable pageable);
+    Page<UserResponseDTO> findAllUsers(Pageable pageable);
 }

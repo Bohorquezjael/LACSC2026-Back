@@ -1,6 +1,7 @@
 package com.innovawebJT.lacsc.dto;
 
 import com.innovawebJT.lacsc.enums.Category;
+import com.innovawebJT.lacsc.enums.Status;
 import com.innovawebJT.lacsc.model.Institution;
 import lombok.Builder;
 
@@ -8,8 +9,10 @@ import lombok.Builder;
 public record UserResponseDTO(Long id,
                               String name,
                               String surname,
-                              String badgeName,
+                              String email,
                               Category category,
-                              Institution institution
+                              Institution institution,
+                              Status status
+                              //sesion especial?
 							) {
 }

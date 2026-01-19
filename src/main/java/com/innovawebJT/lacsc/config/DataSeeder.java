@@ -26,7 +26,7 @@ public class DataSeeder {
 						.surname(faker.name().lastName())
 						.email(faker.internet().emailAddress())
 						.badgeName(faker.name().username())
-						.category(Category.STUDENT)
+						.category(Category.PROFESSIONAL)
 						.institution(
 								new Institution(
 										faker.university().name()
