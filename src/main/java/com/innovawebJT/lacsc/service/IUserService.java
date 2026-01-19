@@ -23,7 +23,7 @@ public interface IUserService {
 
     boolean deleteUser(Long id);
 
-    UserResponseDTO getCurrentUser();
+    UserProfileDTO getCurrentUser();
 
 
     UserResponseDTO getById(Long id);

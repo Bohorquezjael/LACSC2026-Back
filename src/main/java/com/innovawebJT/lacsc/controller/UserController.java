@@ -1,5 +1,6 @@
 package com.innovawebJT.lacsc.controller;
 
+import com.innovawebJT.lacsc.dto.UserProfileDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
 import com.innovawebJT.lacsc.model.Summary;
 import com.innovawebJT.lacsc.service.ISummaryService;
@@ -22,7 +23,7 @@ public class UserController {
 
     // Obtener MI perfil (desde JWT)
     @GetMapping("/me")
-    public ResponseEntity<UserResponseDTO> me() {
+    public ResponseEntity<UserProfileDTO> me() {
         return ResponseEntity.ok(userService.getCurrentUser());
     }
 

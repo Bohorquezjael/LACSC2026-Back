@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Data
@@ -34,42 +33,36 @@ public class User {
 
 	private String surname;
 
-	private byte age;
-
 	private char gender;
 
+	@Column(unique = true)
 	private String email;
 
 	private String cellphone;
 
 	private String country;
-	
+
 	@Enumerated(EnumType.STRING)
 	private Category category;
 
-	//private String password;
 	@Column(name = "keycloak_id", nullable = false, unique = true)
     private String keycloakId;
 
 	@Column(name = "badge_name", unique = true)
 	private String badgeName;
 
-	@OneToOne(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL) 
+	@OneToOne(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL)
 	private EmergencyContact emergencyContact;
-	
+
 	@Embedded
 	private Institution institution;
-	
+
 	private String referencePaymentFile;
 
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
 	private Status status;
 
-	//cambiar por my summaries
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "author")
-    private List<Summary> summaryAsAuthor;
-
-	//añadir my courses
-	
 	@CreationTimestamp
 	private LocalDateTime createdAt;
 }

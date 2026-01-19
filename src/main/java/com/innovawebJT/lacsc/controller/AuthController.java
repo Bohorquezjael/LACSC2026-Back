@@ -1,9 +1,6 @@
 package com.innovawebJT.lacsc.controller;
 
-import com.innovawebJT.lacsc.dto.LoginRequest;
-import com.innovawebJT.lacsc.dto.RegisterDTO;
-import com.innovawebJT.lacsc.dto.TokenResponse;
-import com.innovawebJT.lacsc.dto.UserProfileDTO;
+import com.innovawebJT.lacsc.dto.*;
 import com.innovawebJT.lacsc.service.IUserService;
 import com.innovawebJT.lacsc.service.imp.KeycloakService;
 import lombok.AllArgsConstructor;
@@ -21,16 +18,27 @@ public class AuthController {
     private final IUserService userService;
 
     @PostMapping("/register")
-public ResponseEntity<Void> register(@RequestBody RegisterDTO dto) {
+    public ResponseEntity<Void> register(@RequestBody RegisterDTO dto) {
 
-    String keycloakId = keycloakService.createUser(
+        String keycloakId = keycloakService.createUser(
             dto.email(),
             dto.password(),
             dto.name(),
             dto.surname()
-    );
+        );
+        userService.createOrUpdateProfile(keycloakId, mapToUserProfile(dto));
 
-    UserProfileDTO profile = UserProfileDTO.builder()
+        return ResponseEntity.ok().build();
+    }
+
+    private UserProfileDTO mapToUserProfile(RegisterDTO dto) {
+
+        EmergencyContactDTO contact = EmergencyContactDTO.builder()
+                    .fullName(dto.emergencyContact().getName())
+                    .relationship(dto.emergencyContact().getRelationship())
+                    .phone(dto.emergencyContact().getCellphone())
+                    .build();
+        UserProfileDTO profile = UserProfileDTO.builder()
             .name(dto.name())
             .surname(dto.surname())
             .age(dto.age())
@@ -41,19 +49,9 @@ public ResponseEntity<Void> register(@RequestBody RegisterDTO dto) {
             .gender(dto.gender())
             .country(dto.country())
             .email(dto.email())
+            .emergencyContact(contact)
             .build();
 
-    userService.createOrUpdateProfile(keycloakId, profile);
-
-    return ResponseEntity.ok().build();
-}
-
-//    @PostMapping("/login")
-//    public TokenResponse login(@RequestBody LoginRequest request) {
-//        return keycloakService.login(
-//                request.username(),
-//                request.password()
-//        );
-//    }
-
+        return profile;
+    }
 }

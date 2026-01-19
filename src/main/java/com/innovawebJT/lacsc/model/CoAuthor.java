@@ -25,11 +25,11 @@ public class CoAuthor {
 
     //private boolean isRegistered;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "summary_id")
-//    private Summary summary;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "summary_id")
+    private Summary summary;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "user_id")
-//    private User user;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 }

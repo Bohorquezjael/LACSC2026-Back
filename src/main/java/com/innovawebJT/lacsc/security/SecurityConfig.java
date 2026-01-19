@@ -61,6 +61,7 @@ public SecurityFilterChain swaggerSecurityFilterChain(HttpSecurity httpSecurity)
                         .securityMatcher("/swagger-ui/**", "/swagger-ui.html",
                                         "/v3/api-docs/**", "/swagger-resources/**",
                                         "/webjars/**")
+                .cors(withDefaults())
                         .csrf(AbstractHttpConfigurer::disable)
                         .authorizeHttpRequests(http -> http.anyRequest().authenticated())
                         .oauth2Login(withDefaults())
@@ -71,6 +72,7 @@ public SecurityFilterChain swaggerSecurityFilterChain(HttpSecurity httpSecurity)
         @Order(3)
         public SecurityFilterChain devSecurityFilterChain(HttpSecurity httpSecurity) throws Exception {
                 return httpSecurity
+                        .cors(withDefaults())
                                 .csrf(AbstractHttpConfigurer::disable)
                                 .headers(headers -> headers
                                                 .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))

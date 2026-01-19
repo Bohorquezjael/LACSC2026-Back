@@ -1,5 +1,6 @@
 package com.innovawebJT.lacsc.service.imp;
 
+import com.innovawebJT.lacsc.dto.EmergencyContactDTO;
 import com.innovawebJT.lacsc.dto.UserProfileDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
 import com.innovawebJT.lacsc.exception.UserNotFoundException;
@@ -61,7 +62,11 @@ public class UserService implements IUserService {
 
     return UserResponseDTO.builder()
             .id(saved.getId())
-            .badgeName(saved.getBadgeName())
+            .name(saved.getName())
+            .surname(saved.getSurname())
+            .email(saved.getEmail())
+            .status(saved.getStatus())
+            .institution(saved.getInstitution())
             .category(saved.getCategory())
             .build();
 }
@@ -75,7 +80,6 @@ public UserResponseDTO getProfile(String keycloakId) {
 
     return UserResponseDTO.builder()
             .id(user.getId())
-            .badgeName(user.getBadgeName())
             .category(user.getCategory())
             .build();
 }
@@ -83,7 +87,7 @@ public UserResponseDTO getProfile(String keycloakId) {
 
     @Override
     public Page<UserResponseDTO> getAll(Pageable pageable) {
-        return repository.findAllUsersSummary(pageable);
+        return repository.findAllUsers(pageable);
     }
 
     @Override
@@ -96,17 +100,31 @@ public UserResponseDTO getProfile(String keycloakId) {
     }
 
     @Override
-public UserResponseDTO getCurrentUser() {
+public UserProfileDTO getCurrentUser() {
 
     String keycloakId = SecurityUtils.getKeycloakId();
     log.info("User logged in: {}", keycloakId);
     User user = repository.findByKeycloakId(keycloakId)
             .orElseThrow(() -> new UserNotFoundException("Profile not found"));
 
-    return UserResponseDTO.builder()
-            .id(user.getId())
+    return UserProfileDTO.builder()
+            .name(user.getName())
+            .surname(user.getSurname())
             .badgeName(user.getBadgeName())
+            .cellphone(user.getCellphone())
+            .gender(user.getGender())
+            .email(user.getEmail())
+            .country(user.getCountry())
             .category(user.getCategory())
+            .institution(user.getInstitution())
+            .emergencyContact(
+                    EmergencyContactDTO.builder()
+                            .fullName(user.getEmergencyContact().getName())
+                            .relationship(user.getEmergencyContact().getRelationship())
+                            .phone(user.getEmergencyContact().getCellphone())
+                            .build()
+            )
+            .status(user.getStatus())
             .build();
 }
 
@@ -126,9 +144,10 @@ public UserResponseDTO getCurrentUser() {
                 .id(user.getId())
                 .name(user.getName())
                 .surname(user.getSurname())
-                .badgeName(user.getBadgeName())
+                .email(user.getEmail())
                 .category(user.getCategory())
                 .institution(user.getInstitution())
+                .status(user.getStatus())
                 .build();
     }
 }
