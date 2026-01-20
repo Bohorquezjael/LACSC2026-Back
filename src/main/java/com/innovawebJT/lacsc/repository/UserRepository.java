@@ -30,4 +30,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
         FROM User u
     """)
     Page<UserResponseDTO> findAllUsers(Pageable pageable);
+
+    Optional<User> findByEmail(String email);
 }

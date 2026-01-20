@@ -50,6 +50,7 @@ public class AuthController {
             .country(dto.country())
             .email(dto.email())
             .emergencyContact(contact)
+                .status(dto.status())
             .build();
 
         return profile;

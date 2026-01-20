@@ -45,7 +45,7 @@ public class UserService implements IUserService {
     user.setCellphone(dto.cellphone());
     user.setGender(dto.gender());
     user.setCountry(dto.country());
-    user.setAge(dto.age());
+    user.setStatus(dto.status());
 
     if (dto.emergencyContact() != null) {
         EmergencyContact contact = EmergencyContact.builder()

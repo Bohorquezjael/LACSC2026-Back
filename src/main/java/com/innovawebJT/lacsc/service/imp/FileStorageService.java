@@ -1,0 +1,127 @@
+package com.innovawebJT.lacsc.service.imp;
+
+import com.innovawebJT.lacsc.enums.FileCategory;
+import com.innovawebJT.lacsc.service.IFileStorageService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.*;
+
+@Service
+@RequiredArgsConstructor
+public class FileStorageService implements IFileStorageService {
+
+    private final Path root = Paths.get("storage");
+
+    @Override
+    public String store(
+        Long userId,
+        FileCategory category,
+        Long entityId,
+        MultipartFile file
+    ) {
+
+        validatePdf(file);
+
+        try {
+            Path dir = buildPath(userId, category);
+            Files.createDirectories(dir);
+
+            String filename = buildFilename(category, entityId);
+            Path target = dir.resolve(filename);
+
+            Files.copy(
+                file.getInputStream(),
+                target,
+                StandardCopyOption.REPLACE_EXISTING
+            );
+
+            return root.relativize(target).toString();
+
+        } catch (IOException e) {
+            throw new RuntimeException("Error al guardar archivo", e);
+        }
+    }
+
+    @Override
+    public String replace(String oldPath, MultipartFile newFile) {
+        delete(oldPath);
+
+        Path old = root.resolve(oldPath);
+        return store(
+            extractUserId(old),
+            extractCategory(old),
+            extractEntityId(old),
+            newFile
+        );
+    }
+
+    @Override
+    public Resource load(String path) {
+        try {
+            Path file = root.resolve(path);
+            Resource resource = new UrlResource(file.toUri());
+
+            if (!resource.exists() || !resource.isReadable()) {
+                throw new RuntimeException("Archivo no accesible");
+            }
+
+            return resource;
+
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Error al leer archivo", e);
+        }
+    }
+
+    @Override
+    public void delete(String path) {
+        try {
+            Files.deleteIfExists(root.resolve(path));
+        } catch (IOException e) {
+            throw new RuntimeException("Error al borrar archivo", e);
+        }
+    }
+
+    /* ---------------- helpers ---------------- */
+
+    private Path buildPath(Long userId, FileCategory category) {
+        return root.resolve(
+            "users/user_" + userId + "/" + category.name().toLowerCase()
+        );
+    }
+
+    private String buildFilename(FileCategory category, Long entityId) {
+        return category.name().toLowerCase() + "_" + entityId + ".pdf";
+    }
+
+    private void validatePdf(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Archivo vacío");
+        }
+
+        if (!"application/pdf".equals(file.getContentType())) {
+            throw new IllegalArgumentException("Solo se permiten PDFs");
+        }
+    }
+
+    // ⚠️ simplificado, puedes refinar luego
+    private Long extractUserId(Path path) {
+        return Long.valueOf(path.getName(1).toString().replace("user_", ""));
+    }
+
+    private FileCategory extractCategory(Path path) {
+        return FileCategory.valueOf(
+            path.getName(2).toString().toUpperCase()
+        );
+    }
+
+    private Long extractEntityId(Path path) {
+        String name = path.getFileName().toString();
+        return Long.valueOf(name.replaceAll("\\D+", ""));
+    }
+}

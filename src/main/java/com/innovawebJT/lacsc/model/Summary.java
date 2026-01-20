@@ -1,6 +1,7 @@
 package com.innovawebJT.lacsc.model;
 
 import com.innovawebJT.lacsc.enums.PresentationModality;
+import com.innovawebJT.lacsc.enums.SpecialSessions;
 import com.innovawebJT.lacsc.enums.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -19,7 +20,7 @@ import org.hibernate.annotations.CreationTimestamp;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name="Resumes")
+@Table(name="summaries")
 public class Summary {
     
     @Id
@@ -30,27 +31,29 @@ public class Summary {
 
     private String abstractDescription;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @Enumerated(EnumType.STRING)
     SpecialSessions specialSession;
 
+    @Enumerated(EnumType.STRING)
     PresentationModality presentationModality;
 
-    private boolean isSummaryPaymentVerified;
+    @Enumerated(EnumType.STRING)
+    private Status summaryPayment;
 
-    // cambiar por la persona que registra el resumen
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User author;
+     @OneToMany(
+        mappedBy = "summary",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true
+    )
+    private List<Author> authors;
 
-    //! cambiar por una lista de autores tipo persona
-    @OneToMany(mappedBy = "summary", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<CoAuthor> coAuthors;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "presenter_user_id")
+    private User presenter;
 
     private LocalDate presentationDate;
 
     private int presentationRoom;
-
-    private Status status;
 
     //la asignamos conforme la sala etc... unicamente se manda para el correo
     private String keyAbstract;

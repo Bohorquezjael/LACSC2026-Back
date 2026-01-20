@@ -28,21 +28,21 @@ public class UserController {
     }
 
     // Obtener resúmenes del usuario autenticado
-    @GetMapping("/me/summaries")
-    public ResponseEntity<List<Summary>> mySummaries() {
-        return ResponseEntity.ok(summaryService.getMySummaries());
-    }
+//    @GetMapping("/me/summaries")
+//    public ResponseEntity<List<Summary>> mySummaries() {
+//        return ResponseEntity.ok(summaryService.getMySummaries());
+//    }
 
     // Crear resumen como usuario autenticado
-    @PostMapping("/me/summaries")
-    public ResponseEntity<Summary> createSummary(@RequestBody Summary summary) {
-        Summary created = summaryService.createForCurrentUser(summary);
-        return ResponseEntity
-                .created(URI.create("/api/users/me/summaries/" + created.getId()))
-                .body(created);
-    }
+//    @PostMapping("/me/summaries")
+//    public ResponseEntity<Summary> createSummary(@RequestBody Summary summary) {
+//        Summary created = summaryService.createForCurrentUser(summary);
+//        return ResponseEntity
+//                .created(URI.create("/api/users/me/summaries/" + created.getId()))
+//                .body(created);
+//    }
 
-	@PreAuthorize("hasRole('ADMIN')")
+	@PreAuthorize("hasRole('admin')")
 	@GetMapping("/{id}")
 	public ResponseEntity<UserResponseDTO> getUser(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getById(id));
