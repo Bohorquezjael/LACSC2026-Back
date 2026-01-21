@@ -8,8 +8,8 @@ import com.innovawebJT.lacsc.model.Summary;
 import com.innovawebJT.lacsc.model.User;
 import com.innovawebJT.lacsc.repository.SummaryRepository;
 import com.innovawebJT.lacsc.service.ISummaryService;
-import com.innovawebJT.lacsc.service.imp.FileStorageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -22,7 +22,9 @@ public class SummaryService implements ISummaryService {
 
     private final SummaryRepository summaryRepository;
     private final FileStorageService fileStorageService;
-    private final AuthService authService; // obtiene usuario desde JWT
+    private final AuthService authService;
+    private final MailSenderNotifications emailService;
+
 
     @Override
     public Summary create(Summary summary, MultipartFile paymentFile) {
@@ -42,7 +44,11 @@ public class SummaryService implements ISummaryService {
         if (summary.getAuthors() != null) {
             summary.getAuthors().forEach(author -> author.setSummary(summary));
         }
-        return summaryRepository.save(summary);
+        summary.setSummaryStatus(Status.PENDING);
+        Summary savedSummary = summaryRepository.save(summary);
+        emailService.sendEmail(savedSummary.getPresenter().getEmail(), "Registro de Resumen Exitoso",
+            "Hemos recibido tu resumen: " + savedSummary.getTitle() + ". El pago está en revisión.");
+        return savedSummary;
     }
 
     @Override
@@ -87,6 +93,23 @@ public class SummaryService implements ISummaryService {
     public Summary getById(Long id) {
         return summaryRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Resumen no encontrado"));
+    }
+
+    @Override
+    public Resource getPaymentResource(Long id) {
+        Summary summary = getById(id);
+        User currentUser = authService.getCurrentUser();
+
+        //permitir a admin
+        if (!summary.getPresenter().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("No tienes permiso para ver este comprobante");
+        }
+
+        if (summary.getReferencePaymentFile() == null) {
+            throw new RuntimeException("Este resumen no tiene un comprobante asociado");
+        }
+
+        return fileStorageService.load(summary.getReferencePaymentFile());
     }
 
     @Override
@@ -139,5 +162,23 @@ public Summary updateInfo(Long id, SummaryUpdateRequestDTO request) {
 
     return summaryRepository.save(summary);
 }
+
+@Override
+    public Summary reviewSummary(Long id, com.innovawebJT.lacsc.dto.SummaryReviewDTO review) {
+        Summary summary = getById(id);
+
+        summary.setSummaryPayment(review.status());
+        Summary saved = summaryRepository.save(summary);
+
+        // Disparamos el correo con el mensaje personalizado del Admin
+        String userEmail = summary.getPresenter().getEmail();
+        String subject = review.status() == Status.APPROVED ?
+            "Pago Aprobado - LACSC 2026" :
+            "Acción Requerida: Pago de Resumen Rechazado - LACSC 2026";
+
+        emailService.sendEmail(userEmail, subject, review.message());
+
+        return saved;
+    }
 
 }

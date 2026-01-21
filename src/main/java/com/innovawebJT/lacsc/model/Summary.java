@@ -43,6 +43,9 @@ public class Summary {
     @Enumerated(EnumType.STRING)
     private Status summaryPayment;
 
+    @Enumerated(EnumType.STRING)
+    private Status summaryStatus;
+
      @OneToMany(
         mappedBy = "summary",
         cascade = CascadeType.ALL,

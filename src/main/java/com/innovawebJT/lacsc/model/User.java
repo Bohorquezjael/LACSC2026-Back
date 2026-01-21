@@ -59,6 +59,8 @@ public class User {
 
 	private String referencePaymentFile;
 
+	private String referenceStudentFile;
+
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private Status status;

@@ -4,8 +4,11 @@ import com.innovawebJT.lacsc.dto.SummaryUpdateRequestDTO;
 import com.innovawebJT.lacsc.model.Summary;
 import com.innovawebJT.lacsc.service.ISummaryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -44,6 +47,15 @@ public class SummaryController {
         );
     }
 
+    @PatchMapping("/{id}/review")
+    // @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Summary> review(
+            @PathVariable Long id,
+            @RequestBody com.innovawebJT.lacsc.dto.SummaryReviewDTO review
+    ) {
+        return ResponseEntity.ok(summaryService.reviewSummary(id, review));
+    }
+
     /* ===================== REUPLOAD PDF ===================== */
 
     @PutMapping(
@@ -73,6 +85,18 @@ public class SummaryController {
     @GetMapping("/{id}")
     public ResponseEntity<Summary> byId(@PathVariable Long id) {
         return ResponseEntity.ok(summaryService.getById(id));
+    }
+
+    @GetMapping("/{id}/payment-file")
+    public ResponseEntity<Resource> getPaymentFile(@PathVariable Long id) {
+        Summary summary = summaryService.getById(id);
+
+        Resource file = summaryService.getPaymentResource(id);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getFilename() + "\"")
+                .body(file);
     }
 
     /* ===================== DELETE ===================== */
