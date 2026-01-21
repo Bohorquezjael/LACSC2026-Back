@@ -1,5 +1,6 @@
 package com.innovawebJT.lacsc.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.innovawebJT.lacsc.enums.PresentationModality;
 import com.innovawebJT.lacsc.enums.SpecialSessions;
 import com.innovawebJT.lacsc.enums.Status;
@@ -47,6 +48,7 @@ public class Summary {
         cascade = CascadeType.ALL,
         orphanRemoval = true
     )
+     @JsonManagedReference
     private List<Author> authors;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

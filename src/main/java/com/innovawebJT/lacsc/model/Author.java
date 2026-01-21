@@ -1,5 +1,6 @@
 package com.innovawebJT.lacsc.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,6 +24,7 @@ public class Author {
 
 	@ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "summary_id")
+	@JsonBackReference
     private Summary summary;
 
 	private int authorOrder;
