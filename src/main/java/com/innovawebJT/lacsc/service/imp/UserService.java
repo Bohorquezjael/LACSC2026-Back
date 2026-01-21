@@ -3,6 +3,8 @@ package com.innovawebJT.lacsc.service.imp;
 import com.innovawebJT.lacsc.dto.EmergencyContactDTO;
 import com.innovawebJT.lacsc.dto.UserProfileDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
+import com.innovawebJT.lacsc.enums.FileCategory;
+import com.innovawebJT.lacsc.enums.Status;
 import com.innovawebJT.lacsc.exception.UserNotFoundException;
 import com.innovawebJT.lacsc.model.EmergencyContact;
 import com.innovawebJT.lacsc.model.Summary;
@@ -13,9 +15,11 @@ import com.innovawebJT.lacsc.service.ISummaryService;
 import com.innovawebJT.lacsc.service.IUserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -26,9 +30,13 @@ public class UserService implements IUserService {
 
     private final UserRepository repository;
     private final ISummaryService summaryRepository;
+    private final FileStorageService fileStorageService;
+    private final MailSenderNotifications emailService;
 
     @Override
     public UserResponseDTO createOrUpdateProfile(String keycloakId, UserProfileDTO dto) {
+
+        boolean isNewUser = !repository.existsByKeycloakId(keycloakId);
 
     User user = repository.findByKeycloakId(keycloakId)
             .orElseGet(() -> {
@@ -59,7 +67,10 @@ public class UserService implements IUserService {
     }
 
     User saved = repository.save(user);
-
+    if (isNewUser) {
+            emailService.sendEmail(saved.getEmail(), "¡Bienvenido a LACSC 2026!",
+                "Tu perfil ha sido creado exitosamente. Ya puedes registrar tus resúmenes y subir tus comprobantes de pago.");
+        }
     return UserResponseDTO.builder()
             .id(saved.getId())
             .name(saved.getName())
@@ -71,7 +82,17 @@ public class UserService implements IUserService {
             .build();
 }
 
+    public void reviewUserRegistration(Long userId, Status newStatus, String message) {
+        User user = repository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
+        user.setStatus(newStatus);
+        repository.save(user);
+
+        emailService.sendEmail(user.getEmail(),
+            "Actualización de Inscripción - LACSC 2026",
+            message);
+    }
 
     @Override
 public UserResponseDTO getProfile(String keycloakId) {
@@ -137,6 +158,61 @@ public UserProfileDTO getCurrentUser() {
         return repository.findById(id)
                 .map(this::mapToResponseDTO)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+    }
+
+    public void enrollToCongress(MultipartFile paymentFile, MultipartFile studentFile) {
+        String keycloakId = SecurityUtils.getKeycloakId();
+        User user = repository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        // Guardar archivo de pago
+        String paymentPath = fileStorageService.store(
+            user.getId(),
+            FileCategory.CONGRESS_PAYMENT,
+            "congress",
+            paymentFile
+        );
+        user.setReferencePaymentFile(paymentPath);
+
+        // Guardar comprobante de estudiante si viene
+        if (studentFile != null && !studentFile.isEmpty()) {
+            String studentPath = fileStorageService.store(
+                user.getId(),
+                FileCategory.STUDENT_VERIFICATION,
+                "student",
+                studentFile
+            );
+            user.setReferenceStudentFile(studentPath);
+        }
+
+        user.setStatus(Status.PENDING);
+        repository.save(user);
+
+        emailService.sendEmail(user.getEmail(), "Inscripción al Congreso en Revisión",
+            "Hemos recibido tus comprobantes. En breve un administrador revisará tu pago.");
+    }
+
+    public Resource getCongressFile(Long userId, String type) {
+        User user = repository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        String currentKeycloakId = SecurityUtils.getKeycloakId();
+        boolean isOwner = user.getKeycloakId().equals(currentKeycloakId);
+        boolean isAdmin = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .getAuthentication().getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isOwner && !isAdmin) {
+            throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para ver este archivo");
+        }
+
+        String path = "payment".equals(type) ? user.getReferencePaymentFile() : user.getReferenceStudentFile();
+
+        if (path == null) {
+            throw new RuntimeException("El archivo solicitado no existe");
+        }
+
+        return fileStorageService.load(path);
     }
 
     private UserResponseDTO mapToResponseDTO(User user) {

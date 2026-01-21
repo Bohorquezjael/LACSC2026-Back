@@ -2,8 +2,10 @@ package com.innovawebJT.lacsc.service;
 
 import com.innovawebJT.lacsc.dto.UserProfileDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
+import com.innovawebJT.lacsc.enums.Status;
 import com.innovawebJT.lacsc.model.Summary;
 import com.innovawebJT.lacsc.model.User;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -27,4 +29,8 @@ public interface IUserService {
 
 
     UserResponseDTO getById(Long id);
+
+	void reviewUserRegistration(Long id, Status status, String message);
+
+    Resource getCongressFile(Long id, String payment);
 }
