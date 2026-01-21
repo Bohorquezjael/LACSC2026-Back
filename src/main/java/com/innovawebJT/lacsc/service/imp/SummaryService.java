@@ -32,15 +32,16 @@ public class SummaryService implements ISummaryService {
         String filePath = fileStorageService.store(
     currentUser.getId(),
     FileCategory.SUMMARY_PAYMENT,
-    summary.getId(),
+    summary.getTitle(),
     paymentFile
 );
-
-
         summary.setPresenter(currentUser);
         summary.setReferencePaymentFile(filePath);
         summary.setSummaryPayment(Status.PENDING);
 
+        if (summary.getAuthors() != null) {
+            summary.getAuthors().forEach(author -> author.setSummary(summary));
+        }
         return summaryRepository.save(summary);
     }
 

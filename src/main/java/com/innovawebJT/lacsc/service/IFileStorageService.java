@@ -9,7 +9,7 @@ public interface IFileStorageService {
     String store(
         Long userId,
         FileCategory category,
-        Long entityId,
+        String title,
         MultipartFile file
     );
 

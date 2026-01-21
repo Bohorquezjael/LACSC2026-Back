@@ -22,7 +22,7 @@ public class FileStorageService implements IFileStorageService {
     public String store(
         Long userId,
         FileCategory category,
-        Long entityId,
+        String title,
         MultipartFile file
     ) {
 
@@ -32,7 +32,7 @@ public class FileStorageService implements IFileStorageService {
             Path dir = buildPath(userId, category);
             Files.createDirectories(dir);
 
-            String filename = buildFilename(category, entityId);
+            String filename = buildFilename(category, title);
             Path target = dir.resolve(filename);
 
             Files.copy(
@@ -56,7 +56,7 @@ public class FileStorageService implements IFileStorageService {
         return store(
             extractUserId(old),
             extractCategory(old),
-            extractEntityId(old),
+            extractTitle(old),
             newFile
         );
     }
@@ -95,8 +95,8 @@ public class FileStorageService implements IFileStorageService {
         );
     }
 
-    private String buildFilename(FileCategory category, Long entityId) {
-        return category.name().toLowerCase() + "_" + entityId + ".pdf";
+    private String buildFilename(FileCategory category, String title) {
+        return category.name().toLowerCase() + "_" + title + ".pdf";
     }
 
     private void validatePdf(MultipartFile file) {
@@ -120,8 +120,12 @@ public class FileStorageService implements IFileStorageService {
         );
     }
 
-    private Long extractEntityId(Path path) {
+    private String extractTitle(Path path) {
         String name = path.getFileName().toString();
-        return Long.valueOf(name.replaceAll("\\D+", ""));
+        String[] parts = name.split("_", 3);
+        if (parts.length >= 3) {
+            return parts[2].replace(".pdf", "");
+        }
+        return name.replace(".pdf", "");
     }
 }

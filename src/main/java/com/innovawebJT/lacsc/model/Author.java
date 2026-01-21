@@ -17,8 +17,6 @@ public class Author {
 
 	private String name;
 
-	private String surname;
-
 	private String email;
 
 	private String institutionName;
@@ -27,4 +25,5 @@ public class Author {
     @JoinColumn(name = "summary_id")
     private Summary summary;
 
+	private int authorOrder;
 }
