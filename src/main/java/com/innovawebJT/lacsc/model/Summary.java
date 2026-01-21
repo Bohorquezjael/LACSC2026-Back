@@ -27,10 +27,10 @@ public class Summary {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(columnDefinition = "TEXT", nullable = false, unique = true)
+//    @Column(columnDefinition = "TEXT", nullable = false, unique = true)
     private String title;
 
-    @Column(columnDefinition = "TEXT")
+//    @Column(columnDefinition = "TEXT")
     private String abstractDescription;
 
     @Enumerated(EnumType.STRING)

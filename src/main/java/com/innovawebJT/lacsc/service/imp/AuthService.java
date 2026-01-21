@@ -2,6 +2,7 @@ package com.innovawebJT.lacsc.service.imp;
 
 import com.innovawebJT.lacsc.model.User;
 import com.innovawebJT.lacsc.repository.UserRepository;
+import com.innovawebJT.lacsc.security.SecurityUtils;
 import com.innovawebJT.lacsc.service.IAuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -18,19 +19,12 @@ public class AuthService implements IAuthService {
     @Override
     public User getCurrentUser() {
 
-        Authentication auth =
-            SecurityContextHolder.getContext().getAuthentication();
+        String keycloakId = SecurityUtils.getKeycloakId();
 
-        if (auth == null || !auth.isAuthenticated()) {
-            throw new IllegalStateException("Usuario no autenticado");
-        }
-
-        String email = auth.getName();
-
-        return userRepository.findByEmail(email)
+        return userRepository.findByKeycloakId(keycloakId)
                 .orElseThrow(() ->
                     new UsernameNotFoundException(
-                        "Usuario no encontrado: " + email
+                        "Perfil de usuario no encontrado para el ID: " + keycloakId
                     )
                 );
     }
