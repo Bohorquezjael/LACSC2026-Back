@@ -89,7 +89,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
-    @ExceptionHandler(org.springframework.web.bind.MissingServletRequestPartException.class)
+    @ExceptionHandler(org.springframework.web.multipart.support.MissingServletRequestPartException.class)
     public ResponseEntity<Map<String, String>> handleMissingPart(Exception ex) {
         Map<String, String> body = new HashMap<>();
         body.put("error", "missing_part");
