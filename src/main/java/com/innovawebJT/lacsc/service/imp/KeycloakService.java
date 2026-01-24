@@ -1,6 +1,5 @@
 package com.innovawebJT.lacsc.service.imp;
 
-import com.innovawebJT.lacsc.dto.TokenResponse;
 import com.innovawebJT.lacsc.exception.DuplicateUserFieldException;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
@@ -9,9 +8,8 @@ import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 
+import java.net.URI;
 import java.util.List;
 
 @Service
@@ -26,6 +24,10 @@ public class KeycloakService {
 
     public String createUser(String email, String password, String name, String surname) {
 
+        if (realm == null || realm.isBlank()) {
+            throw new IllegalStateException("Configuración inválida: 'keycloak.realm' está vacío.");
+        }
+
         UserRepresentation user = new UserRepresentation();
         user.setUsername(email);
         user.setEmail(email);
@@ -34,24 +36,37 @@ public class KeycloakService {
         user.setLastName(surname);
         user.setEmailVerified(false);
 
-        Response response = keycloak.realm(realm)
+        String userId;
+        try (Response response = keycloak.realm(realm)
                 .users()
-                .create(user);
+                .create(user)) {
 
-        if (response.getStatus() == 409) {
-            response.readEntity(String.class);
-            throw new DuplicateUserFieldException("email", email);
+            int status = response.getStatus();
+            String body = response.hasEntity() ? response.readEntity(String.class) : null;
+
+            if (status == 409) {
+                // Ojo: 409 no siempre significa "email". Puede ser username u otro atributo en conflicto.
+                throw new DuplicateUserFieldException("email", email);
+            }
+
+            if (status != 201) {
+                throw new RuntimeException(
+                        "Error creando usuario en Keycloak. Status: " + status + " Body: " + body
+                );
+            }
+
+            URI location = response.getLocation();
+            if (location == null || location.getPath() == null || location.getPath().isBlank()) {
+                throw new IllegalStateException(
+                        "Keycloak devolvió 201 pero sin header Location; no se puede obtener el userId. Body: " + body
+                );
+            }
+
+            userId = location.getPath().replaceAll(".*/", "");
+            if (userId.isBlank()) {
+                throw new IllegalStateException("No se pudo extraer userId desde Location: " + location);
+            }
         }
-
-        if (response.getStatus() != 201) {
-             String body = response.readEntity(String.class);
-			 throw new RuntimeException(
-                "Error creating user in Keycloak. Status: "
-                + response.getStatus() + " Body: " + body
-			 );
-        }
-
-        String userId = response.getLocation().getPath().replaceAll(".*/", "");
 
         // Password
         CredentialRepresentation credential = new CredentialRepresentation();
@@ -59,18 +74,29 @@ public class KeycloakService {
         credential.setValue(password);
         credential.setTemporary(false);
 
-        keycloak.realm(realm)
-                .users()
-                .get(userId)
-                .resetPassword(credential);
+        try {
+            keycloak.realm(realm)
+                    .users()
+                    .get(userId)
+                    .resetPassword(credential);
 
-        // Verify email
-        keycloak.realm(realm)
-                .users()
-                .get(userId)
-                .executeActionsEmail(List.of("VERIFY_EMAIL"));
+            // Verify email
+            keycloak.realm(realm)
+                    .users()
+                    .get(userId)
+                    .executeActionsEmail(List.of("VERIFY_EMAIL"));
 
-        return userId;
+            return userId;
+        } catch (RuntimeException ex) {
+            // Si algo falla después de crear el usuario, evitamos dejar "usuarios a medias".
+            // Puedes decidir si esto aplica a tu negocio; al menos reduce inconsistencias.
+            try {
+                deleteUser(userId);
+            } catch (RuntimeException ignored) {
+                // no sobrescribimos la excepción original
+            }
+            throw ex;
+        }
     }
 
     public void deleteUser(String userId) {
@@ -80,33 +106,5 @@ public class KeycloakService {
                 .remove();
     }
 
-//    public TokenResponse login(String username, String password) {
-//
-//        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-//        body.add("client_id", props.getClientId());
-//        body.add("client_secret", props.getClientSecret());
-//        body.add("grant_type", "password");
-//        body.add("username", username);
-//        body.add("password", password);
-//
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-//
-//        HttpEntity<?> entity = new HttpEntity<>(body, headers);
-//
-//        ResponseEntity<Map> response = restTemplate.postForEntity(
-//                props.getTokenUrl(),
-//                entity,
-//                Map.class
-//        );
-//
-//        Map<String, Object> r = response.getBody();
-//
-//        return new TokenResponse(
-//                (String) r.get("access_token"),
-//                (String) r.get("refresh_token"),
-//                ((Number) r.get("expires_in")).longValue()
-//        );
-//    }
-
+    // ... existing code ...
 }
