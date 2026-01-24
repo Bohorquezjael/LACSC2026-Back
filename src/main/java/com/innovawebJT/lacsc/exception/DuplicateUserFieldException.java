@@ -1,5 +1,8 @@
 package com.innovawebJT.lacsc.exception;
 
+import lombok.Getter;
+
+@Getter
 public class DuplicateUserFieldException extends RuntimeException {
     private final String field;
     private final String value;
@@ -10,11 +13,4 @@ public class DuplicateUserFieldException extends RuntimeException {
         this.value = value;
     }
 
-    public String getField() {
-        return field;
-    }
-
-    public String getValue() {
-        return value;
-    }
 }

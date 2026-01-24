@@ -8,7 +8,6 @@ import com.innovawebJT.lacsc.enums.Status;
 import com.innovawebJT.lacsc.exception.DuplicateUserFieldException;
 import com.innovawebJT.lacsc.exception.UserNotFoundException;
 import com.innovawebJT.lacsc.model.EmergencyContact;
-import com.innovawebJT.lacsc.model.Summary;
 import com.innovawebJT.lacsc.model.User;
 import com.innovawebJT.lacsc.repository.UserRepository;
 import com.innovawebJT.lacsc.security.SecurityUtils;
@@ -22,7 +21,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
 
 @Slf4j
 @Service
@@ -161,10 +159,6 @@ public UserProfileDTO getCurrentUser() {
             .build();
 }
 
-    /**
-     * @param id
-     * @return
-     */
     @Override
     public UserResponseDTO getById(Long id) {
         return repository.findById(id)
