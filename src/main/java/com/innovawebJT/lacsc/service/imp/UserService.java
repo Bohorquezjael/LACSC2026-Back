@@ -5,6 +5,7 @@ import com.innovawebJT.lacsc.dto.UserProfileDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
 import com.innovawebJT.lacsc.enums.FileCategory;
 import com.innovawebJT.lacsc.enums.Status;
+import com.innovawebJT.lacsc.exception.DuplicateUserFieldException;
 import com.innovawebJT.lacsc.exception.UserNotFoundException;
 import com.innovawebJT.lacsc.model.EmergencyContact;
 import com.innovawebJT.lacsc.model.Summary;
@@ -81,6 +82,17 @@ public class UserService implements IUserService {
             .category(saved.getCategory())
             .build();
 }
+
+    @Override
+    public void validateRegistration(String email, String badgeName) {
+        if (email != null && repository.findByEmail(email).isPresent()) {
+            throw new DuplicateUserFieldException("email", email);
+        }
+        if (badgeName != null && !badgeName.isBlank()
+                && repository.findByBadgeName(badgeName).isPresent()) {
+            throw new DuplicateUserFieldException("badgeName", badgeName);
+        }
+    }
 
     public void reviewUserRegistration(Long userId, Status newStatus, String message) {
         User user = repository.findById(userId)

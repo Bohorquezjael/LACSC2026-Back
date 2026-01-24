@@ -4,6 +4,7 @@ import com.innovawebJT.lacsc.dto.*;
 import com.innovawebJT.lacsc.service.IUserService;
 import com.innovawebJT.lacsc.service.imp.KeycloakService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/auth")
 @AllArgsConstructor
+@Slf4j
 public class AuthController {
 	private final KeycloakService keycloakService;
     private final IUserService userService;
@@ -20,13 +22,24 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<Void> register(@RequestBody RegisterDTO dto) {
 
+        userService.validateRegistration(dto.email(), dto.badgeName());
+
         String keycloakId = keycloakService.createUser(
             dto.email(),
             dto.password(),
             dto.name(),
             dto.surname()
         );
-        userService.createOrUpdateProfile(keycloakId, mapToUserProfile(dto));
+        try {
+            userService.createOrUpdateProfile(keycloakId, mapToUserProfile(dto));
+        } catch (RuntimeException ex) {
+            try {
+                keycloakService.deleteUser(keycloakId);
+            } catch (RuntimeException deleteEx) {
+                log.warn("Failed to rollback Keycloak user {}", keycloakId, deleteEx);
+            }
+            throw ex;
+        }
 
         return ResponseEntity.ok().build();
     }

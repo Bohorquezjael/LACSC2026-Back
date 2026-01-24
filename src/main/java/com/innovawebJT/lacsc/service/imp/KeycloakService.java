@@ -1,6 +1,7 @@
 package com.innovawebJT.lacsc.service.imp;
 
 import com.innovawebJT.lacsc.dto.TokenResponse;
+import com.innovawebJT.lacsc.exception.DuplicateUserFieldException;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.Keycloak;
@@ -37,6 +38,11 @@ public class KeycloakService {
                 .users()
                 .create(user);
 
+        if (response.getStatus() == 409) {
+            response.readEntity(String.class);
+            throw new DuplicateUserFieldException("email", email);
+        }
+
         if (response.getStatus() != 201) {
              String body = response.readEntity(String.class);
 			 throw new RuntimeException(
@@ -65,6 +71,13 @@ public class KeycloakService {
                 .executeActionsEmail(List.of("VERIFY_EMAIL"));
 
         return userId;
+    }
+
+    public void deleteUser(String userId) {
+        keycloak.realm(realm)
+                .users()
+                .get(userId)
+                .remove();
     }
 
 //    public TokenResponse login(String username, String password) {

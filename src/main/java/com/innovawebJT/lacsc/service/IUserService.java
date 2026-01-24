@@ -21,6 +21,8 @@ public interface IUserService {
 
     UserResponseDTO createOrUpdateProfile(String keycloakId, UserProfileDTO dto);
 
+    void validateRegistration(String email, String badgeName);
+
     Page<UserResponseDTO> getAll(Pageable pageable);
 
     boolean deleteUser(Long id);

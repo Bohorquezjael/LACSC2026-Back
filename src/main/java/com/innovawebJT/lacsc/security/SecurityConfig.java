@@ -72,6 +72,7 @@ public SecurityFilterChain swaggerSecurityFilterChain(HttpSecurity httpSecurity)
         @Order(3)
         public SecurityFilterChain devSecurityFilterChain(HttpSecurity httpSecurity) throws Exception {
                 return httpSecurity
+                        .securityMatcher("/h2-console/**")
                         .cors(withDefaults())
                                 .csrf(AbstractHttpConfigurer::disable)
                                 .headers(headers -> headers
@@ -92,9 +93,10 @@ public SecurityFilterChain swaggerSecurityFilterChain(HttpSecurity httpSecurity)
 public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
     config.setAllowedOrigins(List.of(
-        "http://localhost:3000",
-        "http://127.0.0.1:3000"
-    ));
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://lacsc2026.enesmorelia.unam.mx"
+));
     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
     config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
     config.setAllowCredentials(true);
