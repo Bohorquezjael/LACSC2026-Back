@@ -3,6 +3,7 @@ package com.innovawebJT.lacsc.controller;
 import com.innovawebJT.lacsc.dto.UserProfileDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
 import com.innovawebJT.lacsc.enums.Status;
+import com.innovawebJT.lacsc.model.Course;
 import com.innovawebJT.lacsc.model.Summary;
 import com.innovawebJT.lacsc.model.User;
 import com.innovawebJT.lacsc.repository.UserRepository;
@@ -17,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
 import java.util.List;
@@ -44,7 +46,7 @@ public class UserController {
 
 	@PreAuthorize("hasRole('admin')")
 	@GetMapping("/{id}")
-	public ResponseEntity<UserResponseDTO> getUser(@PathVariable Long id) {
+	public ResponseEntity<UserProfileDTO> getUser(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getById(id));
 	}
 
@@ -74,4 +76,28 @@ public class UserController {
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(file);
     }
+
+	@GetMapping("/me/courses")
+	@PreAuthorize("isAuthenticated()")
+	public ResponseEntity<List<Course>> myCourses() {
+		return ResponseEntity.ok(userService.getMyCourses());
+	}
+
+	@PostMapping("/me/course-enroll/{courseId}")
+	public ResponseEntity<Void> enrollToCourse(@PathVariable Long courseId) {
+		userService.enrollCurrentUserToCourse(courseId);
+		return ResponseEntity.noContent().build();
+	}
+
+	@PostMapping(
+			value = "/me/congress-enroll",
+			consumes = "multipart/form-data"
+	)
+	public ResponseEntity<Void> uploadCongressFiles(
+			@RequestPart("paymentFile") MultipartFile paymentFile,
+			@RequestPart(value = "studentFile", required = false) MultipartFile studentFile
+	) {
+		userService.enrollToCongress(paymentFile, studentFile);
+		return ResponseEntity.noContent().build();
+	}
 }

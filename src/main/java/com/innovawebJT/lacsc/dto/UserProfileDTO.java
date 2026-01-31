@@ -5,6 +5,8 @@ import com.innovawebJT.lacsc.enums.Status;
 import com.innovawebJT.lacsc.model.Institution;
 import lombok.Builder;
 
+import java.time.LocalDateTime;
+
 @Builder
 public record UserProfileDTO (
 		String name,
@@ -18,6 +20,7 @@ public record UserProfileDTO (
         Category category,
         Institution institution,
 		EmergencyContactDTO emergencyContact,
-		Status status
+		Status status,
+		LocalDateTime createdAt
 ){
 }

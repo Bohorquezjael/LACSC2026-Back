@@ -1,5 +1,6 @@
 package com.innovawebJT.lacsc.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.innovawebJT.lacsc.enums.PresentationModality;
 import com.innovawebJT.lacsc.enums.SpecialSessions;
@@ -20,6 +21,7 @@ import org.hibernate.annotations.CreationTimestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name="summaries")
 public class Summary {

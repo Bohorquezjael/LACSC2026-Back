@@ -8,6 +8,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 public interface ISummaryService {
 
     Summary create(Summary summary, MultipartFile paymentFile);
@@ -27,4 +29,6 @@ public interface ISummaryService {
     Summary updateInfo(Long id, SummaryUpdateRequestDTO request);
 
     Summary reviewSummary(Long id, SummaryReviewDTO review);
+
+    List<Summary> getAllByUserId(Long id);
 }

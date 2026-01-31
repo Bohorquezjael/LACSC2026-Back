@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/summaries")
@@ -75,6 +76,11 @@ public class SummaryController {
     @GetMapping("/all")
     public ResponseEntity<Page<Summary>> all(Pageable pageable) {
         return ResponseEntity.ok(summaryService.getAll(pageable));
+    }
+
+    @GetMapping("{userId}/all")
+    public ResponseEntity<List<Summary>> allByUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(summaryService.getAllByUserId(userId));
     }
 
     @GetMapping("/me")

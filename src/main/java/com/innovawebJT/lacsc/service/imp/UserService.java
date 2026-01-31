@@ -7,8 +7,10 @@ import com.innovawebJT.lacsc.enums.FileCategory;
 import com.innovawebJT.lacsc.enums.Status;
 import com.innovawebJT.lacsc.exception.DuplicateUserFieldException;
 import com.innovawebJT.lacsc.exception.UserNotFoundException;
+import com.innovawebJT.lacsc.model.Course;
 import com.innovawebJT.lacsc.model.EmergencyContact;
 import com.innovawebJT.lacsc.model.User;
+import com.innovawebJT.lacsc.repository.CourseRepository;
 import com.innovawebJT.lacsc.repository.UserRepository;
 import com.innovawebJT.lacsc.security.SecurityUtils;
 import com.innovawebJT.lacsc.service.ISummaryService;
@@ -21,6 +23,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashSet;
+import java.util.List;
+
 
 @Slf4j
 @Service
@@ -31,6 +36,7 @@ public class UserService implements IUserService {
     private final ISummaryService summaryRepository;
     private final FileStorageService fileStorageService;
     private final MailSenderNotifications emailService;
+    private final CourseRepository courseRepository;
 
     @Override
     public UserResponseDTO createOrUpdateProfile(String keycloakId, UserProfileDTO dto) {
@@ -160,7 +166,7 @@ public UserProfileDTO getCurrentUser() {
 }
 
     @Override
-    public UserResponseDTO getById(Long id) {
+    public UserProfileDTO getById(Long id) {
         return repository.findById(id)
                 .map(this::mapToResponseDTO)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
@@ -221,15 +227,58 @@ public UserProfileDTO getCurrentUser() {
         return fileStorageService.load(path);
     }
 
-    private UserResponseDTO mapToResponseDTO(User user) {
-        return UserResponseDTO.builder()
-                .id(user.getId())
+    @Override
+    public void enrollCurrentUserToCourse(Long courseId) {
+        String keycloakId = SecurityUtils.getKeycloakId();
+        User user = repository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new UserNotFoundException("Course not found"));
+
+        if (user.getCourses() == null) {
+            user.setCourses(new HashSet<>());
+        }
+
+        if (!user.getCourses().contains(course)) {
+            user.getCourses().add(course);
+        }
+
+        repository.save(user);
+    }
+
+    @Override
+    public List<Course> getMyCourses() {
+        String keycloakId = SecurityUtils.getKeycloakId();
+        User user = repository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        return List.copyOf(user.getCourses());
+    }
+
+    private UserProfileDTO mapToResponseDTO(User user) {
+        return UserProfileDTO.builder()
                 .name(user.getName())
                 .surname(user.getSurname())
+                .cellphone(user.getCellphone())
+                .gender(user.getGender())
+                .country(user.getCountry())
+                .badgeName(user.getBadgeName())
                 .email(user.getEmail())
                 .category(user.getCategory())
                 .institution(user.getInstitution())
+                .emergencyContact(mapToResponseContactDTO(user.getEmergencyContact()))
                 .status(user.getStatus())
+                .createdAt(user.getCreatedAt())
                 .build();
     }
+
+    private EmergencyContactDTO mapToResponseContactDTO(EmergencyContact contact) {
+        return EmergencyContactDTO.builder()
+                .fullName(contact.getName())
+                .relationship(contact.getRelationship())
+                .phone(contact.getCellphone())
+                .build();
+    }
+
+
 }

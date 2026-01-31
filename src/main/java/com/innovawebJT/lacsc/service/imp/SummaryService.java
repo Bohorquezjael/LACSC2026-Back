@@ -16,6 +16,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class SummaryService implements ISummaryService {
@@ -179,6 +181,11 @@ public Summary updateInfo(Long id, SummaryUpdateRequestDTO request) {
         emailService.sendEmail(userEmail, subject, review.message());
 
         return saved;
+    }
+
+    @Override
+    public List<Summary> getAllByUserId(Long id) {
+        return summaryRepository.getAllByPresenter_Id(id).orElseGet(List::of);
     }
 
 }
