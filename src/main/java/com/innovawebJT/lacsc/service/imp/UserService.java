@@ -13,7 +13,6 @@ import com.innovawebJT.lacsc.model.User;
 import com.innovawebJT.lacsc.repository.CourseRepository;
 import com.innovawebJT.lacsc.repository.UserRepository;
 import com.innovawebJT.lacsc.security.SecurityUtils;
-import com.innovawebJT.lacsc.service.ISummaryService;
 import com.innovawebJT.lacsc.service.IUserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +32,6 @@ import java.util.List;
 public class UserService implements IUserService {
 
     private final UserRepository repository;
-    private final ISummaryService summaryRepository;
     private final FileStorageService fileStorageService;
     private final MailSenderNotifications emailService;
     private final CourseRepository courseRepository;
@@ -240,9 +238,7 @@ public UserProfileDTO getCurrentUser() {
             user.setCourses(new HashSet<>());
         }
 
-        if (!user.getCourses().contains(course)) {
-            user.getCourses().add(course);
-        }
+	    user.getCourses().add(course);
 
         repository.save(user);
     }

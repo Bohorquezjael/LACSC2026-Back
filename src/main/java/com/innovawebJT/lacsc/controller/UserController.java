@@ -4,11 +4,6 @@ import com.innovawebJT.lacsc.dto.UserProfileDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
 import com.innovawebJT.lacsc.enums.Status;
 import com.innovawebJT.lacsc.model.Course;
-import com.innovawebJT.lacsc.model.Summary;
-import com.innovawebJT.lacsc.model.User;
-import com.innovawebJT.lacsc.repository.UserRepository;
-import com.innovawebJT.lacsc.service.IFileStorageService;
-import com.innovawebJT.lacsc.service.ISummaryService;
 import com.innovawebJT.lacsc.service.IUserService;
 import lombok.AllArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -20,7 +15,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -29,8 +23,6 @@ import java.util.List;
 public class UserController {
 
     private final IUserService userService;
-	private final UserRepository repository;
-    private final IFileStorageService fileStorageService;
 
     // Obtener MI perfil (desde JWT)
     @GetMapping("/me")
