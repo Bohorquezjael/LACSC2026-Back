@@ -75,6 +75,24 @@ public class UserController {
 		return ResponseEntity.ok(userService.getMyCourses());
 	}
 
+	@GetMapping("/me/files/payment")
+	@PreAuthorize("isAuthenticated()")
+	public ResponseEntity<Resource> getMyPaymentFile() {
+		Resource file = userService.getMyCongressFile("payment");
+		return ResponseEntity.ok()
+				.contentType(MediaType.APPLICATION_PDF)
+				.body(file);
+	}
+
+	@GetMapping("/me/files/student")
+	@PreAuthorize("isAuthenticated()")
+	public ResponseEntity<Resource> getMyStudentFile() {
+		Resource file = userService.getMyCongressFile("student");
+		return ResponseEntity.ok()
+				.contentType(MediaType.APPLICATION_PDF)
+				.body(file);
+	}
+
 	@PostMapping("/me/course-enroll/{courseId}")
 	public ResponseEntity<Void> enrollToCourse(@PathVariable Long courseId) {
 		userService.enrollCurrentUserToCourse(courseId);

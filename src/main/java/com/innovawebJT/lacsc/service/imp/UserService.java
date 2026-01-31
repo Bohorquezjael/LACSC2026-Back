@@ -226,6 +226,21 @@ public UserProfileDTO getCurrentUser() {
     }
 
     @Override
+    public Resource getMyCongressFile(String type) {
+        String keycloakId = SecurityUtils.getKeycloakId();
+        User user = repository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        String path = "payment".equals(type) ? user.getReferencePaymentFile() : user.getReferenceStudentFile();
+
+        if (path == null) {
+            throw new RuntimeException("El archivo solicitado no existe");
+        }
+
+        return fileStorageService.load(path);
+    }
+
+    @Override
     public void enrollCurrentUserToCourse(Long courseId) {
         String keycloakId = SecurityUtils.getKeycloakId();
         User user = repository.findByKeycloakId(keycloakId)

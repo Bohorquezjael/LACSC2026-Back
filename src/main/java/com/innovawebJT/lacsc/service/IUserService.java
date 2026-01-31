@@ -41,4 +41,7 @@ public interface IUserService {
     void enrollToCongress(MultipartFile paymentFile, MultipartFile studentFile);
 
     List<Course> getMyCourses();
+
+    Resource getMyCongressFile(String type);
+
 }
