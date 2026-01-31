@@ -8,8 +8,10 @@ import com.innovawebJT.lacsc.enums.Status;
 import com.innovawebJT.lacsc.exception.DuplicateUserFieldException;
 import com.innovawebJT.lacsc.exception.UserNotFoundException;
 import com.innovawebJT.lacsc.model.Course;
+import com.innovawebJT.lacsc.model.CourseEnrollment;
 import com.innovawebJT.lacsc.model.EmergencyContact;
 import com.innovawebJT.lacsc.model.User;
+import com.innovawebJT.lacsc.repository.CourseEnrollmentRepository;
 import com.innovawebJT.lacsc.repository.CourseRepository;
 import com.innovawebJT.lacsc.repository.UserRepository;
 import com.innovawebJT.lacsc.security.SecurityUtils;
@@ -35,6 +37,7 @@ public class UserService implements IUserService {
     private final FileStorageService fileStorageService;
     private final MailSenderNotifications emailService;
     private final CourseRepository courseRepository;
+    private final CourseEnrollmentRepository courseEnrollmentRepository;
 
     @Override
     public UserResponseDTO createOrUpdateProfile(String keycloakId, UserProfileDTO dto) {
@@ -240,8 +243,10 @@ public UserProfileDTO getCurrentUser() {
         return fileStorageService.load(path);
     }
 
+
+
     @Override
-    public void enrollCurrentUserToCourse(Long courseId) {
+    public void enrollCurrentUserToCourse(Long courseId, MultipartFile paymentFile) {
         String keycloakId = SecurityUtils.getKeycloakId();
         User user = repository.findByKeycloakId(keycloakId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
@@ -249,13 +254,47 @@ public UserProfileDTO getCurrentUser() {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new UserNotFoundException("Course not found"));
 
+        CourseEnrollment enrollment = courseEnrollmentRepository
+                .findByUserIdAndCourseId(user.getId(), courseId)
+                .orElseGet(() -> CourseEnrollment.builder()
+                        .user(user)
+                        .course(course)
+                        .paymentStatus(Status.PENDING)
+                        .build());
+
+        String paymentPath = fileStorageService.store(
+                user.getId(),
+                FileCategory.COURSE_PAYMENT,
+                "course_" + courseId,
+                paymentFile
+        );
+        enrollment.setReferencePaymentFile(paymentPath);
+        enrollment.setPaymentStatus(Status.PENDING);
+
         if (user.getCourses() == null) {
             user.setCourses(new HashSet<>());
         }
+        user.getCourses().add(course);
 
-	    user.getCourses().add(course);
-
+        courseEnrollmentRepository.save(enrollment);
         repository.save(user);
+    }
+
+    @Override
+    public Resource getMyCoursePaymentFile(Long courseId) {
+        String keycloakId = SecurityUtils.getKeycloakId();
+        User user = repository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        CourseEnrollment enrollment = courseEnrollmentRepository
+                .findByUserIdAndCourseId(user.getId(), courseId)
+                .orElseThrow(() -> new UserNotFoundException("Enrollment not found"));
+
+        String path = enrollment.getReferencePaymentFile();
+        if (path == null) {
+            throw new RuntimeException("El archivo solicitado no existe");
+        }
+        return fileStorageService.load(path);
     }
 
     @Override

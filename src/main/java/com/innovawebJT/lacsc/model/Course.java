@@ -24,12 +24,6 @@ public class Course {
 
 	private String name;
 
-	private Status paymentStatus;
-
-	private String referencePaymentFile;
-
-	private Status courseStatus;
-
 	@ManyToMany(mappedBy = "courses", fetch = FetchType.LAZY)
 	private Set<User> users = new HashSet<>();
 }

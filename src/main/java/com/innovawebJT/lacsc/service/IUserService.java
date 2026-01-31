@@ -36,12 +36,14 @@ public interface IUserService {
 
     Resource getCongressFile(Long id, String payment);
 
-    void enrollCurrentUserToCourse(Long courseId);
-
     void enrollToCongress(MultipartFile paymentFile, MultipartFile studentFile);
 
     List<Course> getMyCourses();
 
     Resource getMyCongressFile(String type);
+
+    void enrollCurrentUserToCourse(Long courseId, MultipartFile paymentFile);
+
+    Resource getMyCoursePaymentFile(Long courseId);
 
 }

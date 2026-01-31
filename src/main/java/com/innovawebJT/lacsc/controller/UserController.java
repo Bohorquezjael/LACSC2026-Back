@@ -93,10 +93,25 @@ public class UserController {
 				.body(file);
 	}
 
-	@PostMapping("/me/course-enroll/{courseId}")
-	public ResponseEntity<Void> enrollToCourse(@PathVariable Long courseId) {
-		userService.enrollCurrentUserToCourse(courseId);
+	@PostMapping(
+			value = "/me/course-enroll/{courseId}",
+			consumes = "multipart/form-data"
+	)
+	public ResponseEntity<Void> enrollToCourse(
+			@PathVariable Long courseId,
+			@RequestPart("paymentFile") MultipartFile paymentFile
+	) {
+		userService.enrollCurrentUserToCourse(courseId, paymentFile);
 		return ResponseEntity.noContent().build();
+	}
+
+	@GetMapping("/me/course-files/{courseId}/payment")
+	@PreAuthorize("isAuthenticated()")
+	public ResponseEntity<Resource> getMyCoursePaymentFile(@PathVariable Long courseId) {
+		Resource file = userService.getMyCoursePaymentFile(courseId);
+		return ResponseEntity.ok()
+				.contentType(MediaType.APPLICATION_PDF)
+				.body(file);
 	}
 
 	@PostMapping(
