@@ -105,10 +105,10 @@ public class SummaryService implements ISummaryService {
     @Override
     public Resource getPaymentResource(Long id) {
         Summary summary = getById(id);
-        User currentUser = authService.getCurrentUser();
-        boolean isOwner = summary.getPresenter().getId().equals(currentUser.getId());
         boolean isAdmin = hasAdminRole();
+        User currentUser = isAdmin ? null : authService.getCurrentUser();
 
+        boolean isOwner = !isAdmin && summary.getPresenter().getId().equals(currentUser.getId());
         if (!isOwner && !isAdmin) {
             throw new AccessDeniedException("No tienes permiso para ver este comprobante");
         }
@@ -122,13 +122,11 @@ public class SummaryService implements ISummaryService {
 
     @Override
     public void delete(Long id) {
-
         Summary summary = getById(id);
-        User currentUser = authService.getCurrentUser();
-
-        boolean isOwner = summary.getPresenter().getId().equals(currentUser.getId());
         boolean isAdmin = hasAdminRole();
+        User currentUser = isAdmin ? null : authService.getCurrentUser();
 
+        boolean isOwner = !isAdmin && summary.getPresenter().getId().equals(currentUser.getId());
         if (!isOwner && !isAdmin) {
             throw new AccessDeniedException("No puedes eliminar este resumen");
         }
