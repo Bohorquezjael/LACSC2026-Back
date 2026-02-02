@@ -3,7 +3,6 @@ package com.innovawebJT.lacsc.controller;
 import com.innovawebJT.lacsc.dto.*;
 import com.innovawebJT.lacsc.service.IUserService;
 import com.innovawebJT.lacsc.service.imp.KeycloakService;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -75,22 +74,21 @@ public class AuthController {
                     .relationship(dto.emergencyContact().getRelationship())
                     .phone(dto.emergencyContact().getCellphone())
                     .build();
-        UserProfileDTO profile = UserProfileDTO.builder()
-            .name(dto.name())
-            .surname(dto.surname())
-            .age(dto.age())
-            .badgeName(dto.badgeName())
-            .category(dto.category())
-            .institution(dto.institution())
-            .cellphone(dto.cellphone())
-            .gender(dto.gender())
-            .country(dto.country())
-            .email(dto.email())
-            .emergencyContact(contact)
-                .status(dto.status())
-            .build();
 
-        return profile;
+	    return UserProfileDTO.builder()
+	        .name(dto.name())
+	        .surname(dto.surname())
+	        .age(dto.age())
+	        .badgeName(dto.badgeName())
+	        .category(dto.category())
+	        .institution(dto.institution())
+	        .cellphone(dto.cellphone())
+	        .gender(dto.gender())
+	        .country(dto.country())
+	        .email(dto.email())
+	        .emergencyContact(contact)
+	            .status(dto.status())
+	        .build();
     }
 
     @PostMapping("/session")

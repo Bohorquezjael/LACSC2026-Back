@@ -4,7 +4,6 @@ import com.innovawebJT.lacsc.dto.SummaryReviewDTO;
 import com.innovawebJT.lacsc.dto.SummaryUpdateRequestDTO;
 import com.innovawebJT.lacsc.enums.FileCategory;
 import com.innovawebJT.lacsc.enums.Status;
-import com.innovawebJT.lacsc.model.Author;
 import com.innovawebJT.lacsc.model.Summary;
 import com.innovawebJT.lacsc.model.User;
 import com.innovawebJT.lacsc.repository.SummaryRepository;
@@ -187,7 +186,7 @@ public Summary updateInfo(Long id, SummaryUpdateRequestDTO request) {
             "Pago Aprobado - LACSC 2026" :
             "Acción Requerida: Pago de Resumen Rechazado - LACSC 2026";
 
-        String message = review.message().trim().equals("") ?
+        String message = review.message().trim().isEmpty() ?
                 "Le informamos que el pago correspondiente a su resumen \"" + title + "\" ha sido aceptado.\n A partir de este momento, " +
                         "pasará a la etapa de revisión académica, en la cual será evaluado por el comité de revisores." :
                 "Le informamos que el pago correspondiente a su resumen \"" + title + "\" ha sido rechazado. \nMotivo: " + review.message()
