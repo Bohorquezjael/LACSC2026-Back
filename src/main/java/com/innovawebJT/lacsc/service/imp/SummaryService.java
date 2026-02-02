@@ -9,6 +9,7 @@ import com.innovawebJT.lacsc.model.User;
 import com.innovawebJT.lacsc.repository.SummaryRepository;
 import com.innovawebJT.lacsc.service.ISummaryService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SummaryService implements ISummaryService {
@@ -213,6 +215,7 @@ public Summary updateInfo(Long id, SummaryUpdateRequestDTO request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null) return false;
         for (GrantedAuthority ga : auth.getAuthorities()) {
+            log.info(ga.getAuthority());
             if ("ROLE_ADMIN".equals(ga.getAuthority())) {
                 return true;
             }
