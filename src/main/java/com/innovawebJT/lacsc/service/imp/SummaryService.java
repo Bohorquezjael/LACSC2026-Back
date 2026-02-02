@@ -13,6 +13,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -101,9 +104,10 @@ public class SummaryService implements ISummaryService {
     public Resource getPaymentResource(Long id) {
         Summary summary = getById(id);
         User currentUser = authService.getCurrentUser();
+        boolean isOwner = summary.getPresenter().getId().equals(currentUser.getId());
+        boolean isAdmin = hasAdminRole();
 
-        //permitir a admin
-        if (!summary.getPresenter().getId().equals(currentUser.getId())) {
+        if (!isOwner && !isAdmin) {
             throw new AccessDeniedException("No tienes permiso para ver este comprobante");
         }
 
@@ -120,7 +124,10 @@ public class SummaryService implements ISummaryService {
         Summary summary = getById(id);
         User currentUser = authService.getCurrentUser();
 
-        if (!summary.getPresenter().getId().equals(currentUser.getId())) {
+        boolean isOwner = summary.getPresenter().getId().equals(currentUser.getId());
+        boolean isAdmin = hasAdminRole();
+
+        if (!isOwner && !isAdmin) {
             throw new AccessDeniedException("No puedes eliminar este resumen");
         }
 
@@ -202,4 +209,14 @@ public Summary updateInfo(Long id, SummaryUpdateRequestDTO request) {
         return summaryRepository.getAllByPresenter_Id(id).orElseGet(List::of);
     }
 
+    private boolean hasAdminRole() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return false;
+        for (GrantedAuthority ga : auth.getAuthorities()) {
+            if ("ROLE_ADMIN".equals(ga.getAuthority())) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

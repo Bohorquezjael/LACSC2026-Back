@@ -125,4 +125,16 @@ public class UserController {
 		userService.enrollToCongress(paymentFile, studentFile);
 		return ResponseEntity.noContent().build();
 	}
+
+	@GetMapping("/{id}/course-files/{courseId}/payment")
+	@PreAuthorize("hasRole('ADMIN')")
+	public ResponseEntity<Resource> getUserCoursePaymentFile(
+			@PathVariable Long id,
+			@PathVariable Long courseId
+	) {
+		Resource file = userService.getCoursePaymentFile(id, courseId);
+		return ResponseEntity.ok()
+				.contentType(MediaType.APPLICATION_PDF)
+				.body(file);
+	}
 }

@@ -46,4 +46,5 @@ public interface IUserService {
 
     Resource getMyCoursePaymentFile(Long courseId);
 
+    Resource getCoursePaymentFile(Long userId, Long courseId);
 }

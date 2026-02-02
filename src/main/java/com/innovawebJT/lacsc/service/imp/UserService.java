@@ -21,6 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -288,6 +290,31 @@ public UserProfileDTO getCurrentUser() {
 
         CourseEnrollment enrollment = courseEnrollmentRepository
                 .findByUserIdAndCourseId(user.getId(), courseId)
+                .orElseThrow(() -> new UserNotFoundException("Enrollment not found"));
+
+        String path = enrollment.getReferencePaymentFile();
+        if (path == null) {
+            throw new RuntimeException("El archivo solicitado no existe");
+        }
+        return fileStorageService.load(path);
+    }
+
+    @Override
+    public Resource getCoursePaymentFile(Long userId, Long courseId) {
+        User targetUser = repository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        boolean isOwner = targetUser.getKeycloakId().equals(SecurityUtils.getKeycloakId());
+        boolean isAdmin = SecurityContextHolder.getContext()
+                .getAuthentication().getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isOwner && !isAdmin) {
+            throw new AccessDeniedException("No tienes permiso para ver este archivo");
+        }
+
+        CourseEnrollment enrollment = courseEnrollmentRepository
+                .findByUserIdAndCourseId(targetUser.getId(), courseId)
                 .orElseThrow(() -> new UserNotFoundException("Enrollment not found"));
 
         String path = enrollment.getReferencePaymentFile();
