@@ -133,37 +133,44 @@ public class SummaryService implements ISummaryService {
 public Summary updateInfo(Long id, SummaryUpdateRequestDTO request) {
 
     Summary summary = getById(id);
-    User currentUser = authService.getCurrentUser();
+//    User currentUser = authService.getCurrentUser();
+//
+//    if (!summary.getPresenter().getId().equals(currentUser.getId())) {
+//        throw new AccessDeniedException("No puedes modificar este resumen");
+//    }
+//
+//    if (summary.getSummaryPayment() == Status.APPROVED) {
+//        throw new IllegalStateException(
+//            "No se puede modificar un resumen aprobado"
+//        );
+//    }
 
-    if (!summary.getPresenter().getId().equals(currentUser.getId())) {
-        throw new AccessDeniedException("No puedes modificar este resumen");
-    }
-
-    if (summary.getSummaryPayment() == Status.APPROVED) {
-        throw new IllegalStateException(
-            "No se puede modificar un resumen aprobado"
-        );
-    }
-
-    summary.setTitle(request.title());
-    summary.setAbstractDescription(request.abstractDescription());
-    summary.setSpecialSession(request.specialSession());
     summary.setPresentationModality(request.presentationModality());
     summary.setPresentationDate(request.presentationDate());
     summary.setPresentationRoom(request.presentationRoom());
+    Summary savedSummary = summaryRepository.save(summary);
 
-    // 🔹 autores (reemplazo limpio)
-    summary.getAuthors().clear();
-    request.authors().forEach(a -> {
-        Author author = new Author();
-        author.setName(a.name());
-        author.setInstitutionName(a.institutionName());
-        author.setEmail(a.email());
-        author.setSummary(summary);
-        summary.getAuthors().add(author);
-    });
+        String userEmail = summary.getPresenter().getEmail();
+        String title = summary.getTitle();
+        String message = """
+                Hola, tu resumen "%s" ha sido programado/actualizado.
+                Modalidad: %s
+                Fecha: %s
+                Sala: %s
+                """.formatted(
+                title,
+                request.presentationModality(),
+                request.presentationDate(),
+                request.presentationRoom()
+        );
 
-    return summaryRepository.save(summary);
+        emailService.sendEmail(
+                userEmail,
+                "Actualización de modalidad/agenda - LACSC 2026",
+                message
+        );
+
+        return savedSummary;
 }
 
 @Override

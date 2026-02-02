@@ -1,5 +1,6 @@
 package com.innovawebJT.lacsc.controller;
 
+import com.innovawebJT.lacsc.dto.SummaryReviewDTO;
 import com.innovawebJT.lacsc.dto.SummaryUpdateRequestDTO;
 import com.innovawebJT.lacsc.model.Summary;
 import com.innovawebJT.lacsc.service.ISummaryService;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -38,7 +40,8 @@ public class SummaryController {
 
     /* ===================== UPDATE INFO (SIN PDF) ===================== */
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Summary> updateInfo(
             @PathVariable Long id,
             @RequestBody SummaryUpdateRequestDTO request
@@ -49,10 +52,10 @@ public class SummaryController {
     }
 
     @PatchMapping("/{id}/review")
-    // @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Summary> review(
             @PathVariable Long id,
-            @RequestBody com.innovawebJT.lacsc.dto.SummaryReviewDTO review
+            @RequestBody SummaryReviewDTO review
     ) {
         return ResponseEntity.ok(summaryService.reviewSummary(id, review));
     }
@@ -74,6 +77,7 @@ public class SummaryController {
     /* ===================== GETS ===================== */
 
     @GetMapping("/all")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<Summary>> all(Pageable pageable) {
         return ResponseEntity.ok(summaryService.getAll(pageable));
     }
@@ -89,6 +93,7 @@ public class SummaryController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Summary> byId(@PathVariable Long id) {
         return ResponseEntity.ok(summaryService.getById(id));
     }
@@ -108,6 +113,7 @@ public class SummaryController {
     /* ===================== DELETE ===================== */
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         summaryService.delete(id);
         return ResponseEntity.noContent().build();
