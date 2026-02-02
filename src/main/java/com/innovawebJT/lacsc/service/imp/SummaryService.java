@@ -1,5 +1,6 @@
 package com.innovawebJT.lacsc.service.imp;
 
+import com.innovawebJT.lacsc.dto.SummaryReviewDTO;
 import com.innovawebJT.lacsc.dto.SummaryUpdateRequestDTO;
 import com.innovawebJT.lacsc.enums.FileCategory;
 import com.innovawebJT.lacsc.enums.Status;
@@ -166,7 +167,7 @@ public Summary updateInfo(Long id, SummaryUpdateRequestDTO request) {
 }
 
 @Override
-    public Summary reviewSummary(Long id, com.innovawebJT.lacsc.dto.SummaryReviewDTO review) {
+    public Summary reviewSummary(Long id, SummaryReviewDTO review) {
         Summary summary = getById(id);
 
         summary.setSummaryPayment(review.status());
@@ -174,11 +175,18 @@ public Summary updateInfo(Long id, SummaryUpdateRequestDTO request) {
 
         // Disparamos el correo con el mensaje personalizado del Admin
         String userEmail = summary.getPresenter().getEmail();
+        String title = summary.getTitle();
         String subject = review.status() == Status.APPROVED ?
             "Pago Aprobado - LACSC 2026" :
             "Acción Requerida: Pago de Resumen Rechazado - LACSC 2026";
 
-        emailService.sendEmail(userEmail, subject, review.message());
+        String message = review.message().trim().equals("") ?
+                "Le informamos que el pago correspondiente a su resumen \"" + title + "\" ha sido aceptado.\n A partir de este momento, " +
+                        "pasará a la etapa de revisión académica, en la cual será evaluado por el comité de revisores." :
+                "Le informamos que el pago correspondiente a su resumen \"" + title + "\" ha sido rechazado. \nMotivo: " + review.message()
+                + "\nLe solicitamos actualizar el comprobante de pago directamente en la plataforma.";
+
+        emailService.sendEmail(userEmail, subject, message);
 
         return saved;
     }

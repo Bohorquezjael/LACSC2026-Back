@@ -97,7 +97,7 @@ public CorsConfigurationSource corsConfigurationSource() {
     "http://127.0.0.1:3000",
     "https://lacsc2026.enesmorelia.unam.mx"
 ));
-    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
     config.setAllowCredentials(true);
 

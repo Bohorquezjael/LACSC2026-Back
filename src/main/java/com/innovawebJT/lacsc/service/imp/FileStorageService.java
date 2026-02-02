@@ -3,6 +3,7 @@ package com.innovawebJT.lacsc.service.imp;
 import com.innovawebJT.lacsc.enums.FileCategory;
 import com.innovawebJT.lacsc.service.IFileStorageService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FileStorageService implements IFileStorageService {
@@ -109,15 +111,26 @@ public class FileStorageService implements IFileStorageService {
         }
     }
 
-    // ⚠️ simplificado, puedes refinar luego
     private Long extractUserId(Path path) {
-        return Long.valueOf(path.getName(1).toString().replace("user_", ""));
+        for (Path part : path) {
+            String name = part.toString();
+            if (name.startsWith("user_")) {
+                return Long.valueOf(name.replace("user_", ""));
+            }
+        }
+        throw new IllegalArgumentException("No se pudo extraer userId del path: " + path);
     }
 
     private FileCategory extractCategory(Path path) {
-        return FileCategory.valueOf(
-            path.getName(2).toString().toUpperCase()
-        );
+        for (Path part : path) {
+            String name = part.toString().toUpperCase();
+            try {
+                return FileCategory.valueOf(name);
+            } catch (IllegalArgumentException ignore) {
+                log.error(ignore.getMessage());
+            }
+        }
+        throw new IllegalArgumentException("No se pudo extraer categoría del path: " + path);
     }
 
     private String extractTitle(Path path) {
