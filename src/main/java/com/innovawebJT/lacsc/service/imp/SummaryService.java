@@ -1,5 +1,6 @@
 package com.innovawebJT.lacsc.service.imp;
 
+import com.innovawebJT.lacsc.dto.SummaryCounterDTO;
 import com.innovawebJT.lacsc.dto.SummaryReviewDTO;
 import com.innovawebJT.lacsc.dto.SummaryUpdateRequestDTO;
 import com.innovawebJT.lacsc.enums.FileCategory;
@@ -219,5 +220,15 @@ public Summary updateInfo(Long id, SummaryUpdateRequestDTO request) {
             }
         }
         return false;
+    }
+
+    public SummaryCounterDTO getCountOfSummariesByUserId(Long userId) {
+        int totalOfSummaries = summaryRepository.countAllByPresenter_Id(userId);
+        int summariesPendingForReview = summaryRepository.countAllByPresenter_IdAndSummaryPayment(userId, Status.PENDING);
+        int summariesRejected = summaryRepository.countAllByPresenter_IdAndSummaryPayment(userId, Status.REJECTED);
+        return SummaryCounterDTO.builder()
+                .summariesPendingForReview(summariesRejected + summariesPendingForReview)
+                .totalOfSummaries(totalOfSummaries)
+                .build();
     }
 }

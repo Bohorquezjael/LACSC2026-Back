@@ -40,6 +40,7 @@ public class UserService implements IUserService {
     private final MailSenderNotifications emailService;
     private final CourseRepository courseRepository;
     private final CourseEnrollmentRepository courseEnrollmentRepository;
+    private final SummaryService summaryService;
 
     @Override
     public UserResponseDTO createOrUpdateProfile(String keycloakId, UserProfileDTO dto) {
@@ -127,7 +128,8 @@ public UserResponseDTO getProfile(String keycloakId) {
 
     @Override
     public Page<UserResponseDTO> getAll(Pageable pageable) {
-        return repository.findAllUsers(pageable);
+        Page<User> users = repository.findAll(pageable);
+        return users.map(this::mapToUserResponseDTO);
     }
 
     @Override
@@ -325,6 +327,12 @@ public UserProfileDTO getCurrentUser() {
     }
 
     @Override
+    public Page<UserResponseDTO> scholarshipCandidates(Pageable pageable) {
+
+        return null;
+    }
+
+    @Override
     public List<Course> getMyCourses() {
         String keycloakId = SecurityUtils.getKeycloakId();
         User user = repository.findByKeycloakId(keycloakId)
@@ -346,6 +354,19 @@ public UserProfileDTO getCurrentUser() {
                 .emergencyContact(mapToResponseContactDTO(user.getEmergencyContact()))
                 .status(user.getStatus())
                 .createdAt(user.getCreatedAt())
+                .build();
+    }
+
+    private UserResponseDTO mapToUserResponseDTO(User user) {
+        return UserResponseDTO.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .surname(user.getSurname())
+                .email(user.getEmail())
+                .status(user.getStatus())
+                .institution(user.getInstitution())
+                .category(user.getCategory())
+                .summariesForReview(summaryService.getCountOfSummariesByUserId(user.getId()))
                 .build();
     }
 

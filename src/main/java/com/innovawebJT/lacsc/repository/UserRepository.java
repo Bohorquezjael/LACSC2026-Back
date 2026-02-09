@@ -17,19 +17,19 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByBadgeName(String badgeName);
 
-    @Query("""
-        SELECT new com.innovawebJT.lacsc.dto.UserResponseDTO(
-            u.id,
-            u.name,
-            u.surname,
-            u.email,
-            u.category,
-            u.institution,
-            u.status
-        )
-        FROM User u
-    """)
-    Page<UserResponseDTO> findAllUsers(Pageable pageable);
+//    @Query("""
+//        SELECT new com.innovawebJT.lacsc.dto.UserResponseDTO(
+//            u.id,
+//            u.name,
+//            u.surname,
+//            u.email,
+//            u.category,
+//            u.institution,
+//            u.status
+//        )
+//        FROM User u
+//    """)
+//    Page<UserResponseDTO> findAllUsers(Pageable pageable);
 
     Optional<User> findByEmail(String email);
 }

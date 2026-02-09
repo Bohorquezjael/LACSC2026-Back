@@ -12,7 +12,8 @@ public record UserResponseDTO(Long id,
                               String email,
                               Category category,
                               Institution institution,
-                              Status status
+                              Status status,
+							  SummaryCounterDTO summariesForReview
                               //sesion especial?
 							) {
 }
