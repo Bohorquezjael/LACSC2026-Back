@@ -2,6 +2,7 @@ package com.innovawebJT.lacsc.service;
 
 import com.innovawebJT.lacsc.dto.SummaryReviewDTO;
 import com.innovawebJT.lacsc.dto.SummaryUpdateRequestDTO;
+import com.innovawebJT.lacsc.enums.SpecialSessions;
 import com.innovawebJT.lacsc.model.Summary;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;

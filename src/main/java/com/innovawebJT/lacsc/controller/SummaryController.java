@@ -41,7 +41,7 @@ public class SummaryController {
     /* ===================== UPDATE INFO (SIN PDF) ===================== */
 
     @PatchMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")
     public ResponseEntity<Summary> updateInfo(
             @PathVariable Long id,
             @RequestBody SummaryUpdateRequestDTO request
@@ -52,7 +52,7 @@ public class SummaryController {
     }
 
     @PatchMapping("/{id}/review")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")
     public ResponseEntity<Summary> review(
             @PathVariable Long id,
             @RequestBody SummaryReviewDTO review
@@ -77,12 +77,13 @@ public class SummaryController {
     /* ===================== GETS ===================== */
 
     @GetMapping("/all")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")
     public ResponseEntity<Page<Summary>> all(Pageable pageable) {
         return ResponseEntity.ok(summaryService.getAll(pageable));
     }
 
     @GetMapping("{userId}/all")
+    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")
     public ResponseEntity<List<Summary>> allByUser(@PathVariable Long userId) {
         return ResponseEntity.ok(summaryService.getAllByUserId(userId));
     }
@@ -93,7 +94,7 @@ public class SummaryController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")
     public ResponseEntity<Summary> byId(@PathVariable Long id) {
         return ResponseEntity.ok(summaryService.getById(id));
     }
@@ -113,7 +114,7 @@ public class SummaryController {
     /* ===================== DELETE ===================== */
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN_GENERAL')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         summaryService.delete(id);
         return ResponseEntity.noContent().build();

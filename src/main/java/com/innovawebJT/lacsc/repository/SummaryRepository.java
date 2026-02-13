@@ -1,6 +1,7 @@
 package com.innovawebJT.lacsc.repository;
 
 import com.innovawebJT.lacsc.dto.SummaryCounterDTO;
+import com.innovawebJT.lacsc.enums.SpecialSessions;
 import com.innovawebJT.lacsc.enums.Status;
 import com.innovawebJT.lacsc.model.Summary;
 import com.innovawebJT.lacsc.model.User;
@@ -50,4 +51,8 @@ public interface SummaryRepository extends JpaRepository<Summary, Long> {
     int countAllByPresenter_IdAndSummaryPayment(Long presenterId, Status summaryPayment);
 
     int countAllByPresenter_Id(Long presenterId);
+
+    Page<Summary> findBySpecialSessionIn(List<SpecialSessions> specialSessions, Pageable pageable);
+
+    List<Summary> findAllByPresenter_IdAndSpecialSessionIn(Long userId, List<SpecialSessions> sessions);
 }

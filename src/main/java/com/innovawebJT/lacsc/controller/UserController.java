@@ -30,20 +30,20 @@ public class UserController {
         return ResponseEntity.ok(userService.getCurrentUser());
     }
 
-	@GetMapping("/all")
-    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/all")
+    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")
     public ResponseEntity<Page<UserResponseDTO>> getAll(Pageable pageable) {
         return ResponseEntity.ok(userService.getAll(pageable));
     }
 
-	@PreAuthorize("hasRole('admin')")
+	@PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")
 	@GetMapping("/{id}")
 	public ResponseEntity<UserProfileDTO> getUser(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getById(id));
 	}
 
 	@PatchMapping("/{id}/status")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")
     public ResponseEntity<Void> updateStatus(
             @PathVariable Long id,
             @RequestParam Status status,
@@ -127,7 +127,7 @@ public class UserController {
 	}
 
 	@GetMapping("/{id}/course-files/{courseId}/payment")
-	@PreAuthorize("hasRole('ADMIN')")
+	@PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")
 	public ResponseEntity<Resource> getUserCoursePaymentFile(
 			@PathVariable Long id,
 			@PathVariable Long courseId
@@ -137,4 +137,13 @@ public class UserController {
 				.contentType(MediaType.APPLICATION_PDF)
 				.body(file);
 	}
+
+	//controller for filtering candidates to
+	@GetMapping("/scholarship-candidates")
+	@PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")
+	public ResponseEntity<Page<UserResponseDTO>> getScholarshipCandidates(Pageable pageable) {
+		return ResponseEntity.ok(userService.scholarshipCandidates(pageable));
+	}
+
+//	@GetMapping("/")
 }

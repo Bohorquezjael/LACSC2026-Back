@@ -4,6 +4,8 @@ import com.innovawebJT.lacsc.dto.SummaryCounterDTO;
 import com.innovawebJT.lacsc.dto.SummaryReviewDTO;
 import com.innovawebJT.lacsc.dto.SummaryUpdateRequestDTO;
 import com.innovawebJT.lacsc.enums.FileCategory;
+import com.innovawebJT.lacsc.enums.SpecialSessions;
+import com.innovawebJT.lacsc.enums.ReviewType;
 import com.innovawebJT.lacsc.enums.Status;
 import com.innovawebJT.lacsc.model.Summary;
 import com.innovawebJT.lacsc.model.User;
@@ -18,10 +20,13 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+
+import static com.innovawebJT.lacsc.security.SecurityUtils.*;
 
 @Slf4j
 @Service
@@ -88,8 +93,27 @@ public class SummaryService implements ISummaryService {
 
     @Override
     public Page<Summary> getAll(Pageable pageable) {
-        return summaryRepository.findAll(pageable);
+
+        if (isAdminGeneral()) {
+            log.info("Admin general");
+            return summaryRepository.findAll(pageable);
+        }
+
+        if (isAdminSesion()) {
+            log.info("Admin sesion");
+            List<SpecialSessions> allowedSessions = getAllowedSessionsFromRoles();
+
+            if (allowedSessions.isEmpty()) {
+                return Page.empty(pageable);
+            }
+
+            return summaryRepository
+                    .findBySpecialSessionIn(allowedSessions, pageable);
+        }
+        log.error("No entra a rol");
+        throw new AccessDeniedException("No autorizado");
     }
+
 
     @Override
     public Page<Summary> getMine(Pageable pageable) {
@@ -180,46 +204,49 @@ public Summary updateInfo(Long id, SummaryUpdateRequestDTO request) {
         return savedSummary;
 }
 
-@Override
+    @Override
     public Summary reviewSummary(Long id, SummaryReviewDTO review) {
         Summary summary = getById(id);
 
-        summary.setSummaryPayment(review.status());
-        Summary saved = summaryRepository.save(summary);
+        if (isAdminGeneral()) {
+            return updateSummary(summary, review, ReviewType.PAYMENT);
+        }
 
-        // Disparamos el correo con el mensaje personalizado del Admin
-        String userEmail = summary.getPresenter().getEmail();
-        String title = summary.getTitle();
-        String subject = review.status() == Status.APPROVED ?
-            "Pago Aprobado - LACSC 2026" :
-            "Acción Requerida: Pago de Resumen Rechazado - LACSC 2026";
+        List<SpecialSessions> allowedSessions = getAllowedSessionsFromRoles();
 
-        String message = review.message().trim().isEmpty() ?
-                "Le informamos que el pago correspondiente a su resumen \"" + title + "\" ha sido aceptado.\n A partir de este momento, " +
-                        "pasará a la etapa de revisión académica, en la cual será evaluado por el comité de revisores." :
-                "Le informamos que el pago correspondiente a su resumen \"" + title + "\" ha sido rechazado. \nMotivo: " + review.message()
-                + "\nLe solicitamos actualizar el comprobante de pago directamente en la plataforma.";
+        if (allowedSessions.contains(summary.getSpecialSession())) {
+            return updateSummary(summary, review, ReviewType.ACADEMIC);
+        }
 
-        emailService.sendEmail(userEmail, subject, message);
-
-        return saved;
+        throw new AccessDeniedException("No autorizado");
     }
 
     @Override
-    public List<Summary> getAllByUserId(Long id) {
-        return summaryRepository.getAllByPresenter_Id(id).orElseGet(List::of);
+    public List<Summary> getAllByUserId(Long userId) {
+        if (isAdminGeneral()) {
+            return summaryRepository.getAllByPresenter_Id(userId).orElseGet(List::of);
+        }
+
+        if (isAdminSesion()) {
+            List<SpecialSessions> allowedSessions = getAllowedSessionsFromRoles();
+            if (allowedSessions.isEmpty()) {
+                return List.of();
+            }
+            // Filtramos los resúmenes del usuario para que solo vea los de su sesión
+            return summaryRepository.findAllByPresenter_IdAndSpecialSessionIn(userId, allowedSessions);
+        }
+
+        // Si es el dueño, puede ver todos sus resúmenes
+        User currentUser = authService.getCurrentUser();
+        if (currentUser.getId().equals(userId)) {
+            return summaryRepository.getAllByPresenter_Id(userId).orElseGet(List::of);
+        }
+
+        throw new AccessDeniedException("No tienes permiso para ver estos resúmenes");
     }
 
     private boolean hasAdminRole() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null) return false;
-        for (GrantedAuthority ga : auth.getAuthorities()) {
-            log.info(ga.getAuthority());
-            if ("ROLE_ADMIN".equals(ga.getAuthority())) {
-                return true;
-            }
-        }
-        return false;
+        return isAdminGeneral() || isAdminSesion();
     }
 
     public SummaryCounterDTO getCountOfSummariesByUserId(Long userId) {
@@ -231,4 +258,72 @@ public Summary updateInfo(Long id, SummaryUpdateRequestDTO request) {
                 .totalOfSummaries(totalOfSummaries)
                 .build();
     }
+    private Summary updateSummary(
+            Summary summary,
+            SummaryReviewDTO review,
+            ReviewType type
+    ) {
+
+        if (type == ReviewType.PAYMENT) {
+            summary.setSummaryPayment(review.status());
+        } else {
+            summary.setSummaryStatus(review.status());
+        }
+
+        Summary saved = summaryRepository.save(summary);
+
+        sendReviewNotification(saved, review, type);
+
+        return saved;
+    }
+
+    private void sendReviewNotification(
+            Summary summary,
+            SummaryReviewDTO review,
+            ReviewType type
+    ) {
+
+        String userEmail = summary.getPresenter().getEmail();
+        String title = summary.getTitle();
+
+        boolean approved = review.status() == Status.APPROVED;
+
+        String subject;
+        String message;
+
+        if (type == ReviewType.PAYMENT) {
+            subject = approved
+                    ? "Pago Aprobado - LACSC 2026"
+                    : "Acción Requerida: Pago de Resumen Rechazado - LACSC 2026";
+
+            message = approved
+                    ? """
+                  Le informamos que el pago correspondiente a su resumen "%s" ha sido aceptado.
+                  A partir de este momento pasará a la etapa de revisión académica.
+                  """.formatted(title)
+                    : """
+                  Le informamos que el pago correspondiente a su resumen "%s" ha sido rechazado.
+                  Motivo: %s
+                  Le solicitamos actualizar el comprobante de pago en la plataforma.
+                  """.formatted(title, review.message());
+        } else {
+
+            subject = approved
+                    ? "Resumen Aprobado - LACSC 2026"
+                    : "Acción Requerida: Resumen Rechazado - LACSC 2026";
+
+            message = approved
+                    ? """
+                  Le informamos que su resumen "%s" ha sido aceptado.
+                  A partir de este momento pasará a la etapa de revisión académica.
+                  """.formatted(title)
+                    : """
+                  Le informamos que su resumen "%s" ha sido rechazado.
+                  Motivo: %s
+                  """.formatted(title, review.message());
+        }
+
+        emailService.sendEmail(userEmail, subject, message);
+    }
+
 }
