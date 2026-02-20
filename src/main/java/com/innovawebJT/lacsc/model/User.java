@@ -1,6 +1,8 @@
 package com.innovawebJT.lacsc.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.innovawebJT.lacsc.enums.Category;
+import com.innovawebJT.lacsc.enums.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,14 +11,22 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name="Users")
+@Table(
+    name = "users",
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = "keycloak_id"),
+        @UniqueConstraint(columnNames = "badge_name")
+    }
+)
 public class User {
 
 	@Id
@@ -27,34 +37,47 @@ public class User {
 
 	private String surname;
 
-	private byte age;
-
 	private char gender;
 
+	@Column(unique = true)
 	private String email;
 
 	private String cellphone;
 
 	private String country;
-	
+
 	@Enumerated(EnumType.STRING)
 	private Category category;
 
-	private String password;
+	@Column(name = "keycloak_id", nullable = false, unique = true)
+    private String keycloakId;
 
+	@Column(name = "badge_name", unique = true)
 	private String badgeName;
 
-	@OneToOne(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL) 
+	@OneToOne(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL)
 	private EmergencyContact emergencyContact;
-	
+
 	@Embedded
 	private Institution institution;
-	
+
 	private String referencePaymentFile;
-	
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "author")
-    private List<Summary> summaryAsAuthor;
-	
+
+	private String referenceStudentFile;
+
+	@ManyToMany(fetch = FetchType.LAZY)
+	@JoinTable(
+			name = "user_courses",
+			joinColumns = @JoinColumn(name = "user_id"),
+			inverseJoinColumns = @JoinColumn(name = "course_id")
+	)
+	@Builder.Default
+	private Set<Course> courses = new HashSet<>();
+
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private Status status;
+
 	@CreationTimestamp
 	private LocalDateTime createdAt;
 }

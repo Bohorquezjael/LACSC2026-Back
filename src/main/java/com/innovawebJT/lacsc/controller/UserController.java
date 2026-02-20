@@ -1,81 +1,191 @@
 package com.innovawebJT.lacsc.controller;
 
-import com.innovawebJT.lacsc.dto.UserCreateDTO;
+import com.innovawebJT.lacsc.dto.CongressReviewDTO;
+import com.innovawebJT.lacsc.dto.UserProfileDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
-import com.innovawebJT.lacsc.model.Summary;
-import com.innovawebJT.lacsc.model.User;
-import com.innovawebJT.lacsc.service.ISummaryService;
+import com.innovawebJT.lacsc.enums.Status;
+import com.innovawebJT.lacsc.model.Course;
 import com.innovawebJT.lacsc.service.IUserService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import lombok.AllArgsConstructor;
-
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
 @AllArgsConstructor
 public class UserController {
 
-	private final IUserService service;
-	private final ISummaryService summaryService;
+    private final IUserService userService;
 
-	@PostMapping
-	public ResponseEntity<UserResponseDTO> createUser(@RequestBody UserCreateDTO dto) {
-		UserResponseDTO user = service.create(dto);
-		URI path = URI.create("/users/" + user.id());
-		return ResponseEntity.created(path).body(user);
-	}
+    // Obtener MI perfil (desde JWT)
+    @GetMapping("/me")
+    public ResponseEntity<UserProfileDTO> me() {
+        return ResponseEntity.ok(userService.getCurrentUser());
+    }
 
-	@Operation(summary = "Retrieve a user by ID", description = "Use this endpoint only for accessing existing users by their unique ID. NOT intended for search or filtering operations.")
+    @GetMapping("/all")
+    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION', 'ADMIN_PAGOS', 'ADMIN_REVISION')")
+    public ResponseEntity<Page<UserResponseDTO>> getAll(Pageable pageable) {
+        return ResponseEntity.ok(userService.getAll(pageable));
+    }
+
+	@PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION', 'ADMIN_PAGOS', 'ADMIN_REVISION')")
 	@GetMapping("/{id}")
-	public ResponseEntity<User> getUser(
-			@Parameter(description = "ID of the user to retrieve", example = "123", required = true) @PathVariable Long id) {
-		return ResponseEntity.ok(service.get(id));
+	public ResponseEntity<UserProfileDTO> getUser(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getById(id));
 	}
 
-	@GetMapping("/all")
-	public ResponseEntity<Page<UserResponseDTO>> getAllUsers(@PageableDefault(size = 20) Pageable pageable) {
-		return ResponseEntity.ok(service.getAll(pageable));
+	@PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_PAGOS')")
+    public ResponseEntity<Void> updateStatus(
+            @PathVariable Long id,
+            @RequestBody CongressReviewDTO reviewDTO
+    ) {
+        userService.reviewUserRegistration(id, reviewDTO);
+        return ResponseEntity.noContent().build();
+    }
+
+	@GetMapping("/{id}/files/payment")
+	@PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_PAGOS', 'ADMIN_REVISION')")
+    public ResponseEntity<Resource> getPaymentFile(@PathVariable Long id) {
+        Resource file = userService.getCongressFile(id, "payment");
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(file);
+    }
+
+	@GetMapping("/{id}/files/student")
+	@PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_PAGOS', 'ADMIN_REVISION')")
+	public ResponseEntity<Resource> getStudentFile(@PathVariable Long id) {
+        Resource file = userService.getCongressFile(id, "student");
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(file);
+    }
+
+	@GetMapping("/me/courses")
+	@PreAuthorize("isAuthenticated()")
+	public ResponseEntity<List<Course>> myCourses() {
+		return ResponseEntity.ok(userService.getMyCourses());
 	}
 
-	@GetMapping
-	public ResponseEntity<UserResponseDTO> getByEmail(@RequestParam(required = false) String email) {
-		if (email == null) {
-			return ResponseEntity.badRequest().build();
-		}
-		return ResponseEntity.ok(service.getByEmail(email));
+	@GetMapping("/me/files/payment")
+	@PreAuthorize("isAuthenticated()")
+	public ResponseEntity<Resource> getMyPaymentFile() {
+		Resource file = userService.getMyCongressFile("payment");
+		return ResponseEntity.ok()
+				.contentType(MediaType.APPLICATION_PDF)
+				.body(file);
 	}
 
-	@DeleteMapping("/{id}")
-	public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-		if (service.deleteUser(id)) {
-			return ResponseEntity.ok().build();
-		}else {
-			return ResponseEntity.notFound().build();
-		}
+	@GetMapping("/me/files/student")
+	@PreAuthorize("isAuthenticated()")
+	public ResponseEntity<Resource> getMyStudentFile() {
+		Resource file = userService.getMyCongressFile("student");
+		return ResponseEntity.ok()
+				.contentType(MediaType.APPLICATION_PDF)
+				.body(file);
 	}
 
-	@GetMapping("/{id}/summaries")
-	public ResponseEntity<List<Summary>> getSummaries(@PathVariable Long id){
-		return Optional.ofNullable(summaryService.getSummariesByAuthorId(id))
-				.filter(summaries -> !summaries.isEmpty())
-				.map(ResponseEntity::ok)
-				.orElseGet(() -> ResponseEntity.noContent().build());
+	@PostMapping(
+			value = "/me/course-enroll/{courseId}",
+			consumes = "multipart/form-data"
+	)
+	@PreAuthorize("isAuthenticated()")
+	public ResponseEntity<Void> enrollToCourse(
+			@PathVariable Long courseId,
+			@RequestPart("paymentFile") MultipartFile paymentFile
+	) {
+		userService.enrollCurrentUserToCourse(courseId, paymentFile);
+		return ResponseEntity.noContent().build();
 	}
 
-	@PostMapping("/{id}/summaries")
-	public ResponseEntity<Summary> createSummary(@RequestBody Summary summary, @PathVariable Long id){
-		Summary summCreated = summaryService.createSummary(summary, id);
-		return ResponseEntity.created(URI.create("/users/" + id + "/summaries/" + summCreated.getId()))
-				.body(summCreated);
+	@PutMapping(
+			value = "/me/course-payment/{courseId}",
+			consumes = "multipart/form-data"
+	)
+	@PreAuthorize("isAuthenticated()")
+	public ResponseEntity<Void> reuploadCoursePayment(
+			@PathVariable Long courseId,
+			@RequestPart("paymentFile") MultipartFile paymentFile
+	) {
+		userService.reuploadCoursePayment(courseId, paymentFile);
+		return ResponseEntity.noContent().build();
 	}
+
+	@GetMapping("/me/course-files/{courseId}/payment")
+	@PreAuthorize("isAuthenticated()")
+	public ResponseEntity<Resource> getMyCoursePaymentFile(@PathVariable Long courseId) {
+		Resource file = userService.getMyCoursePaymentFile(courseId);
+		return ResponseEntity.ok()
+				.contentType(MediaType.APPLICATION_PDF)
+				.body(file);
+	}
+
+	@PostMapping(
+			value = "/me/congress-enroll",
+			consumes = "multipart/form-data"
+	)
+	@PreAuthorize("isAuthenticated()")
+	public ResponseEntity<Void> uploadCongressFiles(
+			@RequestPart("paymentFile") MultipartFile paymentFile,
+			@RequestPart(value = "studentFile", required = false) MultipartFile studentFile
+	) {
+		userService.enrollToCongress(paymentFile, studentFile);
+		return ResponseEntity.noContent().build();
+	}
+
+	@PutMapping(
+			value = "/me/congress-payment",
+			consumes = "multipart/form-data"
+	)
+	@PreAuthorize("isAuthenticated()")
+	public ResponseEntity<Void> reuploadCongressFiles(
+			@RequestPart(value = "paymentFile", required = false) MultipartFile paymentFile,
+			@RequestPart(value = "studentFile", required = false) MultipartFile studentFile
+	) {
+		userService.reuploadCongressPayment(paymentFile, studentFile);
+		return ResponseEntity.noContent().build();
+	}
+
+	@GetMapping("/{id}/course-files/{courseId}/payment")
+	@PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_PAGOS', 'ADMIN_REVISION')")
+	public ResponseEntity<Resource> getUserCoursePaymentFile(
+			@PathVariable Long id,
+			@PathVariable Long courseId
+	) {
+		Resource file = userService.getCoursePaymentFile(id, courseId);
+		return ResponseEntity.ok()
+				.contentType(MediaType.APPLICATION_PDF)
+				.body(file);
+	}
+
+	@PatchMapping("/{id}/course-payment/{courseId}/status")
+	@PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_PAGOS')")
+	public ResponseEntity<Void> updateCoursePaymentStatus(
+			@PathVariable Long id,
+			@PathVariable Long courseId,
+			@RequestParam Status status,
+			@RequestBody String message
+	) {
+		userService.reviewCoursePayment(id, courseId, status, message);
+		return ResponseEntity.noContent().build();
+	}
+
+	//controller for filtering candidates to
+	@GetMapping("/scholarship-candidates")
+	@PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION', 'ADMIN_PAGOS', 'ADMIN_REVISION')")
+	public ResponseEntity<Page<UserResponseDTO>> getScholarshipCandidates(Pageable pageable) {
+		return ResponseEntity.ok(userService.scholarshipCandidates(pageable));
+	}
+
+//	@GetMapping("/")
 }

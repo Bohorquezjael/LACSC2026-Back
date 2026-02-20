@@ -1,12 +1,16 @@
 package com.innovawebJT.lacsc.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.innovawebJT.lacsc.enums.PresentationModality;
+import com.innovawebJT.lacsc.enums.SpecialSessions;
+import com.innovawebJT.lacsc.enums.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -16,30 +20,53 @@ import org.hibernate.annotations.CreationTimestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
-@Table(name="Resumes")
+@Table(name="summaries")
 public class Summary {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(columnDefinition = "TEXT", nullable = false, unique = true)
     private String title;
 
-    private String description;
+    @Column(columnDefinition = "TEXT")
+    private String abstractDescription;
 
-    private String content;
+    @Enumerated(EnumType.STRING)
+    SpecialSessions specialSession;
 
-    private boolean isVerified;
+    @Enumerated(EnumType.STRING)
+    PresentationModality presentationModality;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User author;
+    @Enumerated(EnumType.STRING)
+    private Status summaryPayment;
 
-    @OneToMany(mappedBy = "summary", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<CoAuthor> coAuthors;
+    @Enumerated(EnumType.STRING)
+    private Status summaryStatus;
 
-    private LocalDate date;
+     @OneToMany(
+        mappedBy = "summary",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true
+    )
+     @JsonManagedReference
+    private List<Author> authors;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "presenter_user_id")
+    private User presenter;
+
+    private LocalDateTime presentationDateTime;
+
+    private int presentationRoom;
+
+    //la asignamos conforme la sala etc... unicamente se manda para el correo
+    private String keyAbstract;
+
+    private String referencePaymentFile;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

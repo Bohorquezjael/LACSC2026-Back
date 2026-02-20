@@ -1,20 +1,59 @@
 package com.innovawebJT.lacsc.service;
 
-import com.innovawebJT.lacsc.dto.UserCreateDTO;
+import com.innovawebJT.lacsc.dto.CongressReviewDTO;
+import com.innovawebJT.lacsc.dto.UserProfileDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
-import com.innovawebJT.lacsc.model.User;
+import com.innovawebJT.lacsc.enums.Status;
+import com.innovawebJT.lacsc.model.Course;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+
 
 public interface IUserService {
 
-	UserResponseDTO create(UserCreateDTO dto);
+    //User getOrCreateProfile(String keycloakId);
 
-	User get(Long id);
+    UserResponseDTO getProfile(String keycloakId);
 
-	Page<UserResponseDTO> getAll(Pageable pageable);
+    //void createProfile(String keycloakId, UserProfileDTO dto);
 
-	UserResponseDTO getByEmail(String email);
+    UserResponseDTO createOrUpdateProfile(String keycloakId, UserProfileDTO dto);
 
-	boolean deleteUser(Long id);
+    void validateRegistration(String email, String badgeName);
+
+    Page<UserResponseDTO> getAll(Pageable pageable);
+
+    boolean deleteUser(Long id);
+
+    UserProfileDTO getCurrentUser();
+
+    UserProfileDTO getById(Long id);
+
+	void reviewUserRegistration(Long id, CongressReviewDTO reviewDTO);
+
+    Resource getCongressFile(Long id, String payment);
+
+    void enrollToCongress(MultipartFile paymentFile, MultipartFile studentFile);
+
+    List<Course> getMyCourses();
+
+    Resource getMyCongressFile(String type);
+
+    void enrollCurrentUserToCourse(Long courseId, MultipartFile paymentFile);
+
+    Resource getMyCoursePaymentFile(Long courseId);
+
+    Resource getCoursePaymentFile(Long userId, Long courseId);
+
+    void reviewCoursePayment(Long userId, Long courseId, Status status, String message);
+
+    void reuploadCongressPayment(MultipartFile paymentFile, MultipartFile studentFile);
+
+    void reuploadCoursePayment(Long courseId, MultipartFile paymentFile);
+
+    Page<UserResponseDTO> scholarshipCandidates(Pageable pageable);
 }
