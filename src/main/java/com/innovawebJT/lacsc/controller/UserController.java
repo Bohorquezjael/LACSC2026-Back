@@ -43,7 +43,7 @@ public class UserController {
 	}
 
 	@PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")
+    @PreAuthorize("hasRole('ADMIN_GENERAL')")
     public ResponseEntity<Void> updateStatus(
             @PathVariable Long id,
             @RequestParam Status status,
@@ -54,6 +54,7 @@ public class UserController {
     }
 
 	@GetMapping("/{id}/files/payment")
+	@PreAuthorize("hasRole('ADMIN_GENERAL')")
     public ResponseEntity<Resource> getPaymentFile(@PathVariable Long id) {
         Resource file = userService.getCongressFile(id, "payment");
         return ResponseEntity.ok()
@@ -62,7 +63,8 @@ public class UserController {
     }
 
 	@GetMapping("/{id}/files/student")
-    public ResponseEntity<Resource> getStudentFile(@PathVariable Long id) {
+	@PreAuthorize("hasRole('ADMIN_GENERAL')")
+	public ResponseEntity<Resource> getStudentFile(@PathVariable Long id) {
         Resource file = userService.getCongressFile(id, "student");
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
@@ -97,6 +99,7 @@ public class UserController {
 			value = "/me/course-enroll/{courseId}",
 			consumes = "multipart/form-data"
 	)
+	@PreAuthorize("isAuthenticated()")
 	public ResponseEntity<Void> enrollToCourse(
 			@PathVariable Long courseId,
 			@RequestPart("paymentFile") MultipartFile paymentFile
@@ -118,6 +121,7 @@ public class UserController {
 			value = "/me/congress-enroll",
 			consumes = "multipart/form-data"
 	)
+	@PreAuthorize("isAuthenticated()")
 	public ResponseEntity<Void> uploadCongressFiles(
 			@RequestPart("paymentFile") MultipartFile paymentFile,
 			@RequestPart(value = "studentFile", required = false) MultipartFile studentFile
@@ -127,7 +131,7 @@ public class UserController {
 	}
 
 	@GetMapping("/{id}/course-files/{courseId}/payment")
-	@PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")
+	@PreAuthorize("hasRole('ADMIN_GENERAL')")
 	public ResponseEntity<Resource> getUserCoursePaymentFile(
 			@PathVariable Long id,
 			@PathVariable Long courseId

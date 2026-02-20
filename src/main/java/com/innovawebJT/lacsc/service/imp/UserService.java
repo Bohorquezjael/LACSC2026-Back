@@ -13,6 +13,8 @@
     import com.innovawebJT.lacsc.model.User;
     import com.innovawebJT.lacsc.repository.CourseEnrollmentRepository;
     import com.innovawebJT.lacsc.repository.CourseRepository;
+    import com.innovawebJT.lacsc.repository.SummaryRepository;
+    import com.innovawebJT.lacsc.model.Summary;
     import com.innovawebJT.lacsc.repository.UserRepository;
     import com.innovawebJT.lacsc.security.SecurityUtils;
     import com.innovawebJT.lacsc.service.IUserService;
@@ -43,6 +45,7 @@
         private final CourseRepository courseRepository;
         private final CourseEnrollmentRepository courseEnrollmentRepository;
         private final SummaryService summaryService;
+        private final SummaryRepository summaryRepository;
 
         private boolean hasAdminRole() {
             return SecurityUtils.isAdminGeneral() || SecurityUtils.isAdminSesion();
@@ -108,16 +111,21 @@
             }
         }
 
-        public void reviewUserRegistration(Long userId, Status newStatus, String message) {
+        public void reviewUserRegistration(Long userId, Status newStatus, String reason) {
             User user = repository.findById(userId)
                     .orElseThrow(() -> new UserNotFoundException("User not found"));
 
             user.setStatus(newStatus);
             repository.save(user);
-
+            String message;
+            if(Status.APPROVED.equals(newStatus)){
+                message = "Te informamos que tu registro ha sido aprobado. Gracias por participar en LACSC 2026.";
+            }else{
+                message = "Te informamos que tu registro ha sido rechazado. Motivo: " + reason;
+            }
             emailService.sendEmail(user.getEmail(),
                 "Actualización de Inscripción - LACSC 2026",
-                message);
+                    message);
         }
 
         @Override
@@ -145,8 +153,6 @@
                             .map(this::mapToUserResponseDTO);
                 }
             }
-
-            // Si no tiene roles o no es admin, devolver página vacía o según política
             return Page.empty(pageable);
         }
 
@@ -167,35 +173,26 @@
         User user = repository.findByKeycloakId(keycloakId)
                 .orElseThrow(() -> new UserNotFoundException("Profile not found"));
 
-        return UserProfileDTO.builder()
-                .name(user.getName())
-                .surname(user.getSurname())
-                .badgeName(user.getBadgeName())
-                .cellphone(user.getCellphone())
-                .gender(user.getGender())
-                .email(user.getEmail())
-                .country(user.getCountry())
-                .category(user.getCategory())
-                .institution(user.getInstitution())
-                .emergencyContact(
-                        EmergencyContactDTO.builder()
-                                .fullName(user.getEmergencyContact().getName())
-                                .relationship(user.getEmergencyContact().getRelationship())
-                                .phone(user.getEmergencyContact().getCellphone())
-                                .build()
-                )
-                .status(user.getStatus())
-                .referencePaymentFile(user.getReferencePaymentFile())
-                .referenceStudentFile(user.getReferenceStudentFile())
-                .build();
+        return mapToResponseDTO(user);
     }
 
-        @Override
-        public UserProfileDTO getById(Long id) {
-            return repository.findById(id)
-                    .map(this::mapToResponseDTO)
-                    .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+    @Override
+    public UserProfileDTO getById(Long id) {
+        User u = repository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+
+        if (!SecurityUtils.isAdminGeneral() && !SecurityUtils.isAdminSesion()) {
+            throw new AccessDeniedException("No tienes permiso para ver este usuario");
         }
+
+        if (SecurityUtils.isAdminSesion()) {
+            List<Summary> userSummariesInAllowedSessions = summaryRepository.findAllByPresenter_IdAndSpecialSessionIn(u.getId(), SecurityUtils.getAllowedSessionsFromRoles());
+
+            if (userSummariesInAllowedSessions.isEmpty()) {
+                throw new AccessDeniedException("No tienes permiso para ver este usuario");
+            }
+        }
+        return mapToResponseDTO(u);
+    }
 
         public void enrollToCongress(MultipartFile paymentFile, MultipartFile studentFile) {
             String keycloakId = SecurityUtils.getKeycloakId();
@@ -238,7 +235,7 @@
             boolean isOwner = user.getKeycloakId().equals(currentKeycloakId);
 
             if (!isOwner && !isAdmin) {
-                throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para ver este archivo");
+                throw new AccessDeniedException("No tienes permiso para ver este archivo");
             }
 
             String path = "payment".equals(type) ? user.getReferencePaymentFile() : user.getReferenceStudentFile();
@@ -264,8 +261,6 @@
 
             return fileStorageService.load(path);
         }
-
-
 
         @Override
         public void enrollCurrentUserToCourse(Long courseId, MultipartFile paymentFile) {
