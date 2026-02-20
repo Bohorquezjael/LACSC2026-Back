@@ -1,6 +1,5 @@
 package com.innovawebJT.lacsc.repository;
 
-import com.innovawebJT.lacsc.dto.SummaryCounterDTO;
 import com.innovawebJT.lacsc.enums.SpecialSessions;
 import com.innovawebJT.lacsc.enums.Status;
 import com.innovawebJT.lacsc.model.Summary;
