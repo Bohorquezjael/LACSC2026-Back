@@ -108,6 +108,19 @@ public class UserController {
 		return ResponseEntity.noContent().build();
 	}
 
+	@PutMapping(
+			value = "/me/course-payment/{courseId}",
+			consumes = "multipart/form-data"
+	)
+	@PreAuthorize("isAuthenticated()")
+	public ResponseEntity<Void> reuploadCoursePayment(
+			@PathVariable Long courseId,
+			@RequestPart("paymentFile") MultipartFile paymentFile
+	) {
+		userService.reuploadCoursePayment(courseId, paymentFile);
+		return ResponseEntity.noContent().build();
+	}
+
 	@GetMapping("/me/course-files/{courseId}/payment")
 	@PreAuthorize("isAuthenticated()")
 	public ResponseEntity<Resource> getMyCoursePaymentFile(@PathVariable Long courseId) {
@@ -127,6 +140,19 @@ public class UserController {
 			@RequestPart(value = "studentFile", required = false) MultipartFile studentFile
 	) {
 		userService.enrollToCongress(paymentFile, studentFile);
+		return ResponseEntity.noContent().build();
+	}
+
+	@PutMapping(
+			value = "/me/congress-payment",
+			consumes = "multipart/form-data"
+	)
+	@PreAuthorize("isAuthenticated()")
+	public ResponseEntity<Void> reuploadCongressFiles(
+			@RequestPart(value = "paymentFile", required = false) MultipartFile paymentFile,
+			@RequestPart(value = "studentFile", required = false) MultipartFile studentFile
+	) {
+		userService.reuploadCongressPayment(paymentFile, studentFile);
 		return ResponseEntity.noContent().build();
 	}
 

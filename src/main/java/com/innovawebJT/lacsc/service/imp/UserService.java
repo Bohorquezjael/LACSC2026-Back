@@ -363,6 +363,67 @@
         }
 
         @Override
+        public void reuploadCongressPayment(MultipartFile paymentFile, MultipartFile studentFile) {
+            String keycloakId = SecurityUtils.getKeycloakId();
+            User user = repository.findByKeycloakId(keycloakId)
+                    .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+            if (user.getStatus() != Status.REJECTED) {
+                throw new IllegalStateException("Solo puedes reenviar comprobantes si tu registro fue rechazado");
+            }
+
+            if (paymentFile != null && !paymentFile.isEmpty()) {
+                String newPath = fileStorageService.replace(user.getReferencePaymentFile(), paymentFile);
+                user.setReferencePaymentFile(newPath);
+            }
+
+            if (studentFile != null && !studentFile.isEmpty()) {
+                if (user.getReferenceStudentFile() != null) {
+                    String newPath = fileStorageService.replace(user.getReferenceStudentFile(), studentFile);
+                    user.setReferenceStudentFile(newPath);
+                } else {
+                    String newPath = fileStorageService.store(
+                            user.getId(),
+                            FileCategory.STUDENT_VERIFICATION,
+                            "student",
+                            studentFile
+                    );
+                    user.setReferenceStudentFile(newPath);
+                }
+            }
+
+            user.setStatus(Status.PENDING);
+            repository.save(user);
+
+            emailService.sendEmail(user.getEmail(), "Reenvío de comprobantes - LACSC 2026",
+                    "Hemos recibido tus nuevos comprobantes para el congreso. En breve un administrador los revisará.");
+        }
+
+        @Override
+        public void reuploadCoursePayment(Long courseId, MultipartFile paymentFile) {
+            String keycloakId = SecurityUtils.getKeycloakId();
+            User user = repository.findByKeycloakId(keycloakId)
+                    .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+            CourseEnrollment enrollment = courseEnrollmentRepository
+                    .findByUserIdAndCourseId(user.getId(), courseId)
+                    .orElseThrow(() -> new UserNotFoundException("Inscripción al curso no encontrada"));
+
+            if (enrollment.getPaymentStatus() != Status.REJECTED) {
+                throw new IllegalStateException("Solo puedes reenviar comprobantes si el pago fue rechazado");
+            }
+
+            String newPath = fileStorageService.replace(enrollment.getReferencePaymentFile(), paymentFile);
+            enrollment.setReferencePaymentFile(newPath);
+            enrollment.setPaymentStatus(Status.PENDING);
+
+            courseEnrollmentRepository.save(enrollment);
+
+            emailService.sendEmail(user.getEmail(), "Reenvío de pago de curso - LACSC 2026",
+                    "Hemos recibido tu nuevo comprobante para el curso '%s'. En breve un administrador lo revisará.".formatted(enrollment.getCourse().getName()));
+        }
+
+        @Override
         public Page<UserResponseDTO> scholarshipCandidates(Pageable pageable) {
 
             return null;

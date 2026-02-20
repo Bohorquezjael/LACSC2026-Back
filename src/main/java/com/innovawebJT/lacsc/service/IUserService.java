@@ -50,5 +50,9 @@ public interface IUserService {
 
     void reviewCoursePayment(Long userId, Long courseId, Status status, String message);
 
+    void reuploadCongressPayment(MultipartFile paymentFile, MultipartFile studentFile);
+
+    void reuploadCoursePayment(Long courseId, MultipartFile paymentFile);
+
     Page<UserResponseDTO> scholarshipCandidates(Pageable pageable);
 }
