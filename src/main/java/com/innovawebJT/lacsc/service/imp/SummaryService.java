@@ -132,10 +132,11 @@ public class SummaryService implements ISummaryService {
     @Override
     public Resource getPaymentResource(Long id) {
         Summary summary = getById(id);
-        User currentUser = isAdminGeneral() || isAdminPagos() || isAdminRevision() ? null : authService.getCurrentUser();
+        boolean isAdmin = isAdminGeneral() || isAdminPagos() || isAdminRevision();
+        User currentUser = isAdmin ? null : authService.getCurrentUser();
 
-        boolean isOwner = !isAdminGeneral() && !isAdminRevision() && !isAdminPagos() && summary.getPresenter().getId().equals(currentUser.getId());
-        if (!isOwner && !isAdminGeneral()) {
+        boolean isOwner = !isAdmin && summary.getPresenter().getId().equals(currentUser.getId());
+        if (!isOwner && !isAdmin) {
             throw new AccessDeniedException("No tienes permiso para ver este comprobante");
         }
 
