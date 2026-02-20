@@ -1,5 +1,6 @@
 package com.innovawebJT.lacsc.controller;
 
+import com.innovawebJT.lacsc.dto.CongressReviewDTO;
 import com.innovawebJT.lacsc.dto.UserProfileDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
 import com.innovawebJT.lacsc.enums.Status;
@@ -46,10 +47,9 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN_GENERAL')")
     public ResponseEntity<Void> updateStatus(
             @PathVariable Long id,
-            @RequestParam Status status,
-            @RequestBody String message
+            @RequestBody CongressReviewDTO reviewDTO
     ) {
-        userService.reviewUserRegistration(id, status, message);
+        userService.reviewUserRegistration(id, reviewDTO);
         return ResponseEntity.noContent().build();
     }
 

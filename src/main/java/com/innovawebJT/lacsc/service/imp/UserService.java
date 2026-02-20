@@ -1,5 +1,6 @@
     package com.innovawebJT.lacsc.service.imp;
 
+    import com.innovawebJT.lacsc.dto.CongressReviewDTO;
     import com.innovawebJT.lacsc.dto.EmergencyContactDTO;
     import com.innovawebJT.lacsc.dto.UserProfileDTO;
     import com.innovawebJT.lacsc.dto.UserResponseDTO;
@@ -110,17 +111,17 @@
             }
         }
 
-        public void reviewUserRegistration(Long userId, Status newStatus, String reason) {
+        public void reviewUserRegistration(Long userId, CongressReviewDTO dto) {
             User user = repository.findById(userId)
                     .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-            user.setStatus(newStatus);
+            user.setStatus(dto.status());
             repository.save(user);
             String message;
-            if(Status.APPROVED.equals(newStatus)){
+            if(Status.APPROVED.equals(dto.status())){
                 message = "Te informamos que tu registro ha sido aprobado. Gracias por participar en LACSC 2026.";
             }else{
-                message = "Te informamos que tu registro ha sido rechazado. Motivo: " + reason;
+                message = "Te informamos que tu registro ha sido rechazado. Motivo: " + dto.message();
             }
             emailService.sendEmail(user.getEmail(),
                 "Actualización de Inscripción - LACSC 2026",

@@ -320,6 +320,7 @@ public class SummaryService implements ISummaryService {
                 .totalSummaries(total)
                 .build();
     }
+
     private Summary updateSummary(
             Summary summary,
             SummaryReviewDTO review,
