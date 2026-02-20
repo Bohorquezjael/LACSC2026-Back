@@ -260,10 +260,8 @@ public Summary updateInfo(Long id, SummaryUpdateRequestDTO request) {
 
         log.info("[DEBUG_LOG] Calculating summary count for userId: {}", userId);
 
-        summaryRepository.getAllByPresenter_Id(userId).ifPresent(summaries -> {
-            summaries.forEach(s -> log.info("[DEBUG_LOG] Summary ID: {}, Status: {}, Payment: {}, Session: {}", 
-                s.getId(), s.getSummaryStatus(), s.getSummaryPayment(), s.getSpecialSession()));
-        });
+        summaryRepository.getAllByPresenter_Id(userId).ifPresent(summaries -> summaries.forEach(s -> log.info("[DEBUG_LOG] Summary ID: {}, Status: {}, Payment: {}, Session: {}",
+            s.getId(), s.getSummaryStatus(), s.getSummaryPayment(), s.getSpecialSession())));
 
         if (isAdminSesion()) {
             List<SpecialSessions> allowedSessions = getAllowedSessionsFromRoles();
