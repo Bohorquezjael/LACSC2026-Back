@@ -119,8 +119,14 @@ public class SummaryService implements ISummaryService {
 
     @Override
     public Summary getById(Long id) {
-        return summaryRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Resumen no encontrado"));
+        Summary summary = summaryRepository.findById(id).orElseThrow(() -> new RuntimeException("Resumen no encontrado"));
+        if(!isAdminGeneral() && !summary.getPresenter().getId().equals(authService.getCurrentUser().getId())) {
+            throw new AccessDeniedException("No tienes permiso para ver este resumen");
+        }
+        if(isAdminSesion() && !getAllowedSessionsFromRoles().contains(summary.getSpecialSession())) {
+            throw new AccessDeniedException("No estas autorizado para ver resumenes de otras sesiones.");
+        }
+        return summary;
     }
 
     @Override
@@ -224,14 +230,19 @@ public class SummaryService implements ISummaryService {
         log.info("[DEBUG_LOG] Reviewing summary id: {}. Review status: {}. Review Type: {}. Is Admin General: {}. Is Admin Session: {}", 
                 id, review.status(), review.type(), isAdminGeneral(), isAdminSesion());
 
+        if (isAdminGeneral() && (ReviewType.PAYMENT == review.type())) {
+            return updateSummary(summary, review, review.type());
+        }
         if (review.type() != null) {
             if (review.type() == ReviewType.PAYMENT && !isAdminGeneral()) {
                 throw new AccessDeniedException("Solo el administrador general puede revisar pagos");
             }
-            if (review.type() == ReviewType.ACADEMIC && !isAdminSesion() && !isAdminGeneral()) {
+
+            //?Si es necesario podemos ajustar que el admin general pueda aprovar resumenes ademas de pagos
+            //quitar isAdminGeneral()
+            if (review.type() == ReviewType.ACADEMIC && (!isAdminSesion() || isAdminGeneral())) {
                 throw new AccessDeniedException("No tiene permisos para revisión académica");
             }
-
             if (review.type() == ReviewType.ACADEMIC && isAdminSesion() && !isAdminGeneral()) {
                 List<SpecialSessions> allowedSessions = getAllowedSessionsFromRoles();
                 if (!allowedSessions.contains(summary.getSpecialSession())) {
@@ -241,22 +252,12 @@ public class SummaryService implements ISummaryService {
             
             return updateSummary(summary, review, review.type());
         }
-
-        if (isAdminGeneral()) {
-            return updateSummary(summary, review, ReviewType.PAYMENT);
-        }
-
-        List<SpecialSessions> allowedSessions = getAllowedSessionsFromRoles();
-        if (allowedSessions.contains(summary.getSpecialSession())) {
-            return updateSummary(summary, review, ReviewType.ACADEMIC);
-        }
-
         throw new AccessDeniedException("No autorizado");
     }
 
     @Override
     public List<Summary> getAllByUserId(Long userId) {
-        if (isAdminGeneral()) {
+        if (isAdminGeneral() || authService.getCurrentUser().getId().equals(userId)) {
             return summaryRepository.getAllByPresenter_Id(userId).orElseGet(List::of);
         }
 
@@ -266,11 +267,6 @@ public class SummaryService implements ISummaryService {
                 return List.of();
             }
             return summaryRepository.findAllByPresenter_IdAndSpecialSessionIn(userId, allowedSessions);
-        }
-
-        User currentUser = authService.getCurrentUser();
-        if (currentUser.getId().equals(userId)) {
-            return summaryRepository.getAllByPresenter_Id(userId).orElseGet(List::of);
         }
 
         throw new AccessDeniedException("No tienes permiso para ver estos resúmenes");
