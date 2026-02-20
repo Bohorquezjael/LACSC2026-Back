@@ -60,7 +60,7 @@ public class Summary {
     @JoinColumn(name = "presenter_user_id")
     private User presenter;
 
-    private LocalDate presentationDate;
+    private LocalDateTime presentationDateTime;
 
     private int presentationRoom;
 

@@ -17,10 +17,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -160,37 +156,67 @@ public class SummaryService implements ISummaryService {
     }
 
     @Override
-public Summary updateInfo(Long id, SummaryUpdateRequestDTO request) {
-
-    Summary summary = getById(id);
-
-    summary.setPresentationModality(request.presentationModality());
-    summary.setPresentationDate(request.presentationDate());
-    summary.setPresentationRoom(request.presentationRoom());
-    Summary savedSummary = summaryRepository.save(summary);
-
+    public Summary updateInfo(Long id, SummaryUpdateRequestDTO request) {
+        Summary summary = getById(id);
         String userEmail = summary.getPresenter().getEmail();
         String title = summary.getTitle();
-        String message = """
-                Hola, tu resumen "%s" ha sido programado/actualizado.
-                Modalidad: %s
-                Fecha: %s
-                Sala: %s
-                """.formatted(
-                title,
-                request.presentationModality(),
-                request.presentationDate(),
-                request.presentationRoom()
-        );
+        String message;
+        Summary savedSummary;
 
-        emailService.sendEmail(
-                userEmail,
-                "Actualización de modalidad/agenda - LACSC 2026",
-                message
-        );
+        if (isAdminGeneral()) {
+            summary.setPresentationModality(request.presentationModality());
+            summary.setPresentationDateTime(request.presentationDateTime());
+            summary.setPresentationRoom(request.presentationRoom());
+            savedSummary = summaryRepository.save(summary);
 
-        return savedSummary;
-}
+            message = """
+                    Hola, tu resumen "%s" ha sido programado/actualizado.
+                    Modalidad: %s
+                    Fecha: %s
+                    Hora: %s
+                    Sala: %s
+                    """.formatted(
+                    title,
+                    request.presentationModality(),
+                    request.presentationDateTime().toLocalDate(),
+                    request.presentationDateTime().toLocalTime(),
+                    request.presentationRoom()
+            );
+
+            emailService.sendEmail(
+                    userEmail,
+                    "Actualización de modalidad/agenda - LACSC 2026",
+                    message
+            );
+
+            return savedSummary;
+        }
+
+        if (isAdminSesion()) {
+            // Validar que no se intente modificar campos restringidos
+            if (request.presentationDateTime() != null && !request.presentationDateTime().equals(summary.getPresentationDateTime())) {
+                throw new AccessDeniedException("No tiene permisos para modificar la fecha/hora de la presentación");
+            }
+            if (request.presentationRoom() != 0 && request.presentationRoom() != summary.getPresentationRoom()) {
+                throw new AccessDeniedException("No tiene permisos para modificar la sala de la presentación");
+            }
+            if (request.authors() != null && !request.authors().isEmpty()) {
+                throw new AccessDeniedException("No tiene permisos para modificar los autores");
+            }
+
+            summary.setPresentationModality(request.presentationModality());
+            savedSummary = summaryRepository.save(summary);
+            message = "Hola, tu resumen \"%s\" ha sido programado/actualizado.\nModalidad: %s".formatted(title, request.presentationModality());
+            emailService.sendEmail(
+                    userEmail,
+                    "Actualización de modalidad/agenda - LACSC 2026",
+                    message
+            );
+            return savedSummary;
+        }
+
+        throw new AccessDeniedException("No tiene permisos para realizar esta acción");
+    }
 
     @Override
     public Summary reviewSummary(Long id, SummaryReviewDTO review) {
