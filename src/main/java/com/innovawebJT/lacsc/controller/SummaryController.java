@@ -52,7 +52,7 @@ public class SummaryController {
     }
 
     @PatchMapping("/{id}/review")
-    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")
+    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION', 'ADMIN_PAGOS')")
     public ResponseEntity<Summary> review(
             @PathVariable Long id,
             @RequestBody SummaryReviewDTO review

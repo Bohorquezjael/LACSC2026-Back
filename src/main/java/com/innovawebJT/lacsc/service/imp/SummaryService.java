@@ -227,31 +227,33 @@ public class SummaryService implements ISummaryService {
     @Override
     public Summary reviewSummary(Long id, SummaryReviewDTO review) {
         Summary summary = getById(id);
-        log.info("[DEBUG_LOG] Reviewing summary id: {}. Review status: {}. Review Type: {}. Is Admin General: {}. Is Admin Session: {}", 
-                id, review.status(), review.type(), isAdminGeneral(), isAdminSesion());
+        log.info("[DEBUG_LOG] Reviewing summary id: {}. Review status: {}. Review Type: {}. Is Admin General: {}. Is Admin Session: {}. Is Admin Pagos: {}", 
+                id, review.status(), review.type(), isAdminGeneral(), isAdminSesion(), isAdminPagos());
 
-        if (isAdminGeneral() && (ReviewType.PAYMENT == review.type())) {
+        if (review.type() == null) {
+            throw new AccessDeniedException("No autorizado");
+        }
+
+        if (review.type() == ReviewType.PAYMENT) {
+            if (!isAdminGeneral() && !isAdminPagos()) {
+                throw new AccessDeniedException("No tienes permiso para revisar pagos");
+            }
             return updateSummary(summary, review, review.type());
         }
-        if (review.type() != null) {
-            if (review.type() == ReviewType.PAYMENT && !isAdminGeneral()) {
-                throw new AccessDeniedException("Solo el administrador general puede revisar pagos");
-            }
 
-            //?Si es necesario podemos ajustar que el admin general pueda aprovar resumenes ademas de pagos
-            //quitar isAdminGeneral()
-            if (review.type() == ReviewType.ACADEMIC && (!isAdminSesion() || isAdminGeneral())) {
+        if (review.type() == ReviewType.ACADEMIC) {
+            if (!isAdminSesion() && !isAdminGeneral()) {
                 throw new AccessDeniedException("No tiene permisos para revisión académica");
             }
-            if (review.type() == ReviewType.ACADEMIC && isAdminSesion() && !isAdminGeneral()) {
+            if (isAdminSesion() && !isAdminGeneral()) {
                 List<SpecialSessions> allowedSessions = getAllowedSessionsFromRoles();
                 if (!allowedSessions.contains(summary.getSpecialSession())) {
                     throw new AccessDeniedException("No autorizado para revisar esta sesión");
                 }
             }
-            
             return updateSummary(summary, review, review.type());
         }
+
         throw new AccessDeniedException("No autorizado");
     }
 
@@ -285,19 +287,20 @@ public class SummaryService implements ISummaryService {
         summaryRepository.getAllByPresenter_Id(userId).ifPresent(summaries -> summaries.forEach(s -> log.info("[DEBUG_LOG] Summary ID: {}, Status: {}, Payment: {}, Session: {}",
             s.getId(), s.getSummaryStatus(), s.getSummaryPayment(), s.getSpecialSession())));
 
-        if (isAdminSesion()) {
+        if (isAdminPagos()) {
+            log.info("[DEBUG_LOG] Admin pagos detected. Counting by SummaryPayment.");
+            approved = summaryRepository.countAllByPresenter_IdAndSummaryPayment(userId, Status.APPROVED);
+            total = summaryRepository.countAllByPresenter_Id(userId);
+        } else if (isAdminRevision()) {
+            log.info("[DEBUG_LOG] Admin revisión detected. Counting by SummaryStatus.");
+            approved = summaryRepository.countAllByPresenter_IdAndSummaryStatus(userId, Status.APPROVED);
+            total = summaryRepository.countAllByPresenter_Id(userId);
+        } else if (isAdminSesion()) {
             List<SpecialSessions> allowedSessions = getAllowedSessionsFromRoles();
             log.info("[DEBUG_LOG] Admin session roles detected. Allowed sessions: {}", allowedSessions);
             if (allowedSessions.isEmpty()) {
-                log.info("[DEBUG_LOG] No session roles found (S_01 to S_16). Falling back to other logic if applicable.");
-                if (isAdminGeneral()) {
-                    log.info("[DEBUG_LOG] Admin general detected as fallback. Counting by SummaryPayment.");
-                    approved = summaryRepository.countAllByPresenter_IdAndSummaryPayment(userId, Status.APPROVED);
-                    total = summaryRepository.countAllByPresenter_Id(userId);
-                } else {
-                    approved = 0;
-                    total = 0;
-                }
+                approved = 0;
+                total = 0;
             } else {
                 approved = summaryRepository.countAllByPresenter_IdAndSummaryStatusAndSpecialSessionIn(userId, Status.APPROVED, allowedSessions);
                 total = summaryRepository.countAllByPresenter_IdAndSpecialSessionIn(userId, allowedSessions);
