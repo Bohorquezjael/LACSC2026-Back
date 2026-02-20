@@ -13,7 +13,6 @@ public record UserResponseDTO(Long id,
                               Category category,
                               Institution institution,
                               Status status,
-							  SummaryCounterDTO summariesForReview
-                              //sesion especial?
+							  SummaryCounterDTO summariesReviewed
 							) {
 }

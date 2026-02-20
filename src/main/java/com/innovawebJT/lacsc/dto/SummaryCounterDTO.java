@@ -4,7 +4,7 @@ import lombok.Builder;
 
 @Builder
 public record SummaryCounterDTO(
-		int summariesPendingForReview,
-		int totalOfSummaries
+		int approvedSummaries,
+		int totalSummaries
 ) {
 }

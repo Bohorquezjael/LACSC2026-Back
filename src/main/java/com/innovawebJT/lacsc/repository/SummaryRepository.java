@@ -9,6 +9,8 @@ import com.innovawebJT.lacsc.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -48,9 +50,20 @@ public interface SummaryRepository extends JpaRepository<Summary, Long> {
 
     Optional<List<Summary>> getAllByPresenter_IdAndSummaryPayment(Long id, Status status);
 
-    int countAllByPresenter_IdAndSummaryPayment(Long presenterId, Status summaryPayment);
+    @Query("SELECT COUNT(s) FROM Summary s WHERE s.presenter.id = :presenterId AND s.summaryPayment = :summaryPayment")
+    int countAllByPresenter_IdAndSummaryPayment(@Param("presenterId") Long presenterId, @Param("summaryPayment") Status summaryPayment);
 
-    int countAllByPresenter_Id(Long presenterId);
+    @Query("SELECT COUNT(s) FROM Summary s WHERE s.presenter.id = :presenterId AND s.summaryStatus = :summaryStatus")
+    int countAllByPresenter_IdAndSummaryStatus(@Param("presenterId") Long presenterId, @Param("summaryStatus") Status summaryStatus);
+
+    @Query("SELECT COUNT(s) FROM Summary s WHERE s.presenter.id = :presenterId")
+    int countAllByPresenter_Id(@Param("presenterId") Long presenterId);
+
+    @Query("SELECT COUNT(s) FROM Summary s WHERE s.presenter.id = :presenterId AND s.summaryStatus = :summaryStatus AND s.specialSession IN :sessions")
+    int countAllByPresenter_IdAndSummaryStatusAndSpecialSessionIn(@Param("presenterId") Long presenterId, @Param("summaryStatus") Status summaryStatus, @Param("sessions") List<SpecialSessions> sessions);
+
+    @Query("SELECT COUNT(s) FROM Summary s WHERE s.presenter.id = :presenterId AND s.specialSession IN :sessions")
+    int countAllByPresenter_IdAndSpecialSessionIn(@Param("presenterId") Long presenterId, @Param("sessions") List<SpecialSessions> sessions);
 
     Page<Summary> findBySpecialSessionIn(List<SpecialSessions> specialSessions, Pageable pageable);
 

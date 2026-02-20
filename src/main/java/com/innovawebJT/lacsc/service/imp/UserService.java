@@ -28,9 +28,8 @@
 
     import java.util.HashSet;
     import java.util.List;
-    import java.util.stream.Collectors;
+
     import com.innovawebJT.lacsc.enums.SpecialSessions;
-    import com.innovawebJT.lacsc.security.SecurityUtils;
 
 
     @Slf4j
@@ -186,6 +185,8 @@
                                 .build()
                 )
                 .status(user.getStatus())
+                .referencePaymentFile(user.getReferencePaymentFile())
+                .referenceStudentFile(user.getReferenceStudentFile())
                 .build();
     }
 
@@ -371,6 +372,8 @@
                     .emergencyContact(mapToResponseContactDTO(user.getEmergencyContact()))
                     .status(user.getStatus())
                     .createdAt(user.getCreatedAt())
+                    .referencePaymentFile(user.getReferencePaymentFile())
+                    .referenceStudentFile(user.getReferenceStudentFile())
                     .build();
         }
 
@@ -383,7 +386,7 @@
                     .status(user.getStatus())
                     .institution(user.getInstitution())
                     .category(user.getCategory())
-                    .summariesForReview(summaryService.getCountOfSummariesByUserId(user.getId()))
+                    .summariesReviewed(summaryService.getCountOfSummariesByUserId(user.getId()))
                     .build();
         }
 

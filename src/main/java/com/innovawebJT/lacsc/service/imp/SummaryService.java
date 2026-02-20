@@ -130,11 +130,10 @@ public class SummaryService implements ISummaryService {
     @Override
     public Resource getPaymentResource(Long id) {
         Summary summary = getById(id);
-        boolean isAdmin = hasAdminRole();
-        User currentUser = isAdmin ? null : authService.getCurrentUser();
+        User currentUser = isAdminGeneral() ? null : authService.getCurrentUser();
 
-        boolean isOwner = !isAdmin && summary.getPresenter().getId().equals(currentUser.getId());
-        if (!isOwner && !isAdmin) {
+        boolean isOwner = !isAdminGeneral() && summary.getPresenter().getId().equals(currentUser.getId());
+        if (!isOwner && !isAdminGeneral()) {
             throw new AccessDeniedException("No tienes permiso para ver este comprobante");
         }
 
@@ -164,17 +163,6 @@ public class SummaryService implements ISummaryService {
 public Summary updateInfo(Long id, SummaryUpdateRequestDTO request) {
 
     Summary summary = getById(id);
-//    User currentUser = authService.getCurrentUser();
-//
-//    if (!summary.getPresenter().getId().equals(currentUser.getId())) {
-//        throw new AccessDeniedException("No puedes modificar este resumen");
-//    }
-//
-//    if (summary.getSummaryPayment() == Status.APPROVED) {
-//        throw new IllegalStateException(
-//            "No se puede modificar un resumen aprobado"
-//        );
-//    }
 
     summary.setPresentationModality(request.presentationModality());
     summary.setPresentationDate(request.presentationDate());
@@ -207,13 +195,32 @@ public Summary updateInfo(Long id, SummaryUpdateRequestDTO request) {
     @Override
     public Summary reviewSummary(Long id, SummaryReviewDTO review) {
         Summary summary = getById(id);
+        log.info("[DEBUG_LOG] Reviewing summary id: {}. Review status: {}. Review Type: {}. Is Admin General: {}. Is Admin Session: {}", 
+                id, review.status(), review.type(), isAdminGeneral(), isAdminSesion());
+
+        if (review.type() != null) {
+            if (review.type() == ReviewType.PAYMENT && !isAdminGeneral()) {
+                throw new AccessDeniedException("Solo el administrador general puede revisar pagos");
+            }
+            if (review.type() == ReviewType.ACADEMIC && !isAdminSesion() && !isAdminGeneral()) {
+                throw new AccessDeniedException("No tiene permisos para revisión académica");
+            }
+
+            if (review.type() == ReviewType.ACADEMIC && isAdminSesion() && !isAdminGeneral()) {
+                List<SpecialSessions> allowedSessions = getAllowedSessionsFromRoles();
+                if (!allowedSessions.contains(summary.getSpecialSession())) {
+                    throw new AccessDeniedException("No autorizado para revisar esta sesión");
+                }
+            }
+            
+            return updateSummary(summary, review, review.type());
+        }
 
         if (isAdminGeneral()) {
             return updateSummary(summary, review, ReviewType.PAYMENT);
         }
 
         List<SpecialSessions> allowedSessions = getAllowedSessionsFromRoles();
-
         if (allowedSessions.contains(summary.getSpecialSession())) {
             return updateSummary(summary, review, ReviewType.ACADEMIC);
         }
@@ -232,11 +239,9 @@ public Summary updateInfo(Long id, SummaryUpdateRequestDTO request) {
             if (allowedSessions.isEmpty()) {
                 return List.of();
             }
-            // Filtramos los resúmenes del usuario para que solo vea los de su sesión
             return summaryRepository.findAllByPresenter_IdAndSpecialSessionIn(userId, allowedSessions);
         }
 
-        // Si es el dueño, puede ver todos sus resúmenes
         User currentUser = authService.getCurrentUser();
         if (currentUser.getId().equals(userId)) {
             return summaryRepository.getAllByPresenter_Id(userId).orElseGet(List::of);
@@ -250,12 +255,49 @@ public Summary updateInfo(Long id, SummaryUpdateRequestDTO request) {
     }
 
     public SummaryCounterDTO getCountOfSummariesByUserId(Long userId) {
-        int totalOfSummaries = summaryRepository.countAllByPresenter_Id(userId);
-        int summariesPendingForReview = summaryRepository.countAllByPresenter_IdAndSummaryPayment(userId, Status.PENDING);
-        int summariesRejected = summaryRepository.countAllByPresenter_IdAndSummaryPayment(userId, Status.REJECTED);
+        int approved;
+        int total;
+
+        log.info("[DEBUG_LOG] Calculating summary count for userId: {}", userId);
+
+        summaryRepository.getAllByPresenter_Id(userId).ifPresent(summaries -> {
+            summaries.forEach(s -> log.info("[DEBUG_LOG] Summary ID: {}, Status: {}, Payment: {}, Session: {}", 
+                s.getId(), s.getSummaryStatus(), s.getSummaryPayment(), s.getSpecialSession()));
+        });
+
+        if (isAdminSesion()) {
+            List<SpecialSessions> allowedSessions = getAllowedSessionsFromRoles();
+            log.info("[DEBUG_LOG] Admin session roles detected. Allowed sessions: {}", allowedSessions);
+            if (allowedSessions.isEmpty()) {
+                log.info("[DEBUG_LOG] No session roles found (S_01 to S_16). Falling back to other logic if applicable.");
+                if (isAdminGeneral()) {
+                    log.info("[DEBUG_LOG] Admin general detected as fallback. Counting by SummaryPayment.");
+                    approved = summaryRepository.countAllByPresenter_IdAndSummaryPayment(userId, Status.APPROVED);
+                    total = summaryRepository.countAllByPresenter_Id(userId);
+                } else {
+                    approved = 0;
+                    total = 0;
+                }
+            } else {
+                approved = summaryRepository.countAllByPresenter_IdAndSummaryStatusAndSpecialSessionIn(userId, Status.APPROVED, allowedSessions);
+                total = summaryRepository.countAllByPresenter_IdAndSpecialSessionIn(userId, allowedSessions);
+                log.info("[DEBUG_LOG] Session count result - Approved: {}, Total: {}", approved, total);
+            }
+        } else if (isAdminGeneral()) {
+            log.info("[DEBUG_LOG] Admin general detected. Counting by SummaryPayment.");
+            approved = summaryRepository.countAllByPresenter_IdAndSummaryPayment(userId, Status.APPROVED);
+            total = summaryRepository.countAllByPresenter_Id(userId);
+        } else {
+            log.info("[DEBUG_LOG] Owner or other detected. Counting by SummaryStatus.");
+            approved = summaryRepository.countAllByPresenter_IdAndSummaryStatus(userId, Status.APPROVED);
+            total = summaryRepository.countAllByPresenter_Id(userId);
+        }
+
+        log.info("[DEBUG_LOG] Count result - Approved: {}, Total: {}", approved, total);
+
         return SummaryCounterDTO.builder()
-                .summariesPendingForReview(summariesRejected + summariesPendingForReview)
-                .totalOfSummaries(totalOfSummaries)
+                .approvedSummaries(approved)
+                .totalSummaries(total)
                 .build();
     }
     private Summary updateSummary(
@@ -263,14 +305,16 @@ public Summary updateInfo(Long id, SummaryUpdateRequestDTO request) {
             SummaryReviewDTO review,
             ReviewType type
     ) {
-
+        log.info("[DEBUG_LOG] updateSummary - Type: {}. Status: {}", type, review.status());
         if (type == ReviewType.PAYMENT) {
             summary.setSummaryPayment(review.status());
         } else {
             summary.setSummaryStatus(review.status());
+            log.info("[DEBUG_LOG] Updated summaryStatus to: {}", summary.getSummaryStatus());
         }
 
         Summary saved = summaryRepository.save(summary);
+        log.info("[DEBUG_LOG] Saved summary id: {}. summaryStatus: {}", saved.getId(), saved.getSummaryStatus());
 
         sendReviewNotification(saved, review, type);
 
@@ -314,11 +358,10 @@ public Summary updateInfo(Long id, SummaryUpdateRequestDTO request) {
 
             message = approved
                     ? """
-                  Le informamos que su resumen "%s" ha sido aceptado.
-                  A partir de este momento pasará a la etapa de revisión académica.
+                  Le informamos que su resumen "%s" ha sido aprobado por el comite academico.
                   """.formatted(title)
                     : """
-                  Le informamos que su resumen "%s" ha sido rechazado.
+                  Le informamos que su resumen "%s" ha sido rechazado por el comite academico.
                   Motivo: %s
                   """.formatted(title, review.message());
         }

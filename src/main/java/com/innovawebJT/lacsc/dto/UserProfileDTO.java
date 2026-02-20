@@ -21,6 +21,8 @@ public record UserProfileDTO (
         Institution institution,
 		EmergencyContactDTO emergencyContact,
 		Status status,
-		LocalDateTime createdAt
+		LocalDateTime createdAt,
+		String referencePaymentFile,
+		String referenceStudentFile
 ){
 }
