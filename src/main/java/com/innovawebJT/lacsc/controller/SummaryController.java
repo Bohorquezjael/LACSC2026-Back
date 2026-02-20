@@ -77,13 +77,13 @@ public class SummaryController {
     /* ===================== GETS ===================== */
 
     @GetMapping("/all")
-    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")
+    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION', 'ADMIN_PAGOS', 'ADMIN_REVISION')")
     public ResponseEntity<Page<Summary>> all(Pageable pageable) {
         return ResponseEntity.ok(summaryService.getAll(pageable));
     }
 
     @GetMapping("{userId}/all")
-    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")
+    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION', 'ADMIN_PAGOS', 'ADMIN_REVISION')")
     public ResponseEntity<List<Summary>> allByUser(@PathVariable Long userId) {
         return ResponseEntity.ok(summaryService.getAllByUserId(userId));
     }
@@ -94,7 +94,7 @@ public class SummaryController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")
+    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION', 'ADMIN_PAGOS', 'ADMIN_REVISION')")
     public ResponseEntity<Summary> byId(@PathVariable Long id) {
         return ResponseEntity.ok(summaryService.getById(id));
     }

@@ -42,6 +42,14 @@ public final class SecurityUtils {
         return hasRole("ADMIN_SESSION");
     }
 
+    public static boolean isAdminPagos() {
+        return hasRole("ADMIN_PAGOS");
+    }
+
+    public static boolean isAdminRevision() {
+        return hasRole("ADMIN_REVISION");
+    }
+
     public static java.util.List<String> getSessionRoles() {
         return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
                 .map(org.springframework.security.core.GrantedAuthority::getAuthority)

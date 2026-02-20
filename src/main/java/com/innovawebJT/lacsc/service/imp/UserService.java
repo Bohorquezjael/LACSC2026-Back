@@ -48,7 +48,7 @@
         private final SummaryRepository summaryRepository;
 
         private boolean hasAdminRole() {
-            return SecurityUtils.isAdminGeneral() || SecurityUtils.isAdminSesion();
+            return SecurityUtils.isAdminGeneral() || SecurityUtils.isAdminSesion() || SecurityUtils.isAdminPagos() || SecurityUtils.isAdminRevision();
         }
 
         @Override
@@ -112,6 +112,9 @@
         }
 
         public void reviewUserRegistration(Long userId, CongressReviewDTO dto) {
+            if (!SecurityUtils.isAdminGeneral() && !SecurityUtils.isAdminPagos()) {
+                throw new AccessDeniedException("No tienes permiso para realizar esta acción");
+            }
             User user = repository.findById(userId)
                     .orElseThrow(() -> new UserNotFoundException("User not found"));
 
@@ -180,7 +183,7 @@
     public UserProfileDTO getById(Long id) {
         User u = repository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
 
-        if (!SecurityUtils.isAdminGeneral() && !SecurityUtils.isAdminSesion()) {
+        if (!SecurityUtils.isAdminGeneral() && !SecurityUtils.isAdminSesion() && !SecurityUtils.isAdminPagos() && !SecurityUtils.isAdminRevision()) {
             throw new AccessDeniedException("No tienes permiso para ver este usuario");
         }
 
@@ -231,10 +234,10 @@
                     .orElseThrow(() -> new UserNotFoundException("User not found"));
 
             String currentKeycloakId = SecurityUtils.getKeycloakId();
-            boolean isAdmin = hasAdminRole();
             boolean isOwner = user.getKeycloakId().equals(currentKeycloakId);
+            boolean canView = isOwner || SecurityUtils.isAdminGeneral() || SecurityUtils.isAdminPagos() || SecurityUtils.isAdminRevision();
 
-            if (!isOwner && !isAdmin) {
+            if (!canView) {
                 throw new AccessDeniedException("No tienes permiso para ver este archivo");
             }
 
@@ -320,9 +323,9 @@
                     .orElseThrow(() -> new UserNotFoundException("User not found"));
 
             boolean isOwner = targetUser.getKeycloakId().equals(SecurityUtils.getKeycloakId());
-            boolean isAdmin = SecurityUtils.isAdminGeneral();
+            boolean canView = isOwner || SecurityUtils.isAdminGeneral() || SecurityUtils.isAdminPagos() || SecurityUtils.isAdminRevision();
 
-            if (!isOwner && !isAdmin) {
+            if (!canView) {
                 throw new AccessDeniedException("No tienes permiso para ver este archivo");
             }
 
@@ -339,8 +342,8 @@
 
         @Override
         public void reviewCoursePayment(Long userId, Long courseId, Status status, String message) {
-            if (!SecurityUtils.isAdminGeneral()) {
-                throw new AccessDeniedException("Solo el administrador general puede revisar pagos");
+            if (!SecurityUtils.isAdminGeneral() && !SecurityUtils.isAdminPagos()) {
+                throw new AccessDeniedException("No tienes permiso para realizar esta acción");
             }
 
             CourseEnrollment enrollment = courseEnrollmentRepository

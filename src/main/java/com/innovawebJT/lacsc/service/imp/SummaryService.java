@@ -90,7 +90,7 @@ public class SummaryService implements ISummaryService {
     @Override
     public Page<Summary> getAll(Pageable pageable) {
 
-        if (isAdminGeneral()) {
+        if (isAdminGeneral() || isAdminPagos() || isAdminRevision()) {
             log.info("Admin general");
             return summaryRepository.findAll(pageable);
         }
@@ -120,7 +120,7 @@ public class SummaryService implements ISummaryService {
     @Override
     public Summary getById(Long id) {
         Summary summary = summaryRepository.findById(id).orElseThrow(() -> new RuntimeException("Resumen no encontrado"));
-        if(!isAdminGeneral() && !summary.getPresenter().getId().equals(authService.getCurrentUser().getId())) {
+        if(!isAdminGeneral() && !isAdminRevision() && !isAdminPagos() && !summary.getPresenter().getId().equals(authService.getCurrentUser().getId())) {
             throw new AccessDeniedException("No tienes permiso para ver este resumen");
         }
         if(isAdminSesion() && !getAllowedSessionsFromRoles().contains(summary.getSpecialSession())) {
@@ -132,9 +132,9 @@ public class SummaryService implements ISummaryService {
     @Override
     public Resource getPaymentResource(Long id) {
         Summary summary = getById(id);
-        User currentUser = isAdminGeneral() ? null : authService.getCurrentUser();
+        User currentUser = isAdminGeneral() || isAdminPagos() || isAdminRevision() ? null : authService.getCurrentUser();
 
-        boolean isOwner = !isAdminGeneral() && summary.getPresenter().getId().equals(currentUser.getId());
+        boolean isOwner = !isAdminGeneral() && !isAdminRevision() && !isAdminPagos() && summary.getPresenter().getId().equals(currentUser.getId());
         if (!isOwner && !isAdminGeneral()) {
             throw new AccessDeniedException("No tienes permiso para ver este comprobante");
         }
@@ -257,7 +257,7 @@ public class SummaryService implements ISummaryService {
 
     @Override
     public List<Summary> getAllByUserId(Long userId) {
-        if (isAdminGeneral() || authService.getCurrentUser().getId().equals(userId)) {
+        if (isAdminGeneral() || isAdminPagos() || isAdminRevision() || authService.getCurrentUser().getId().equals(userId)) {
             return summaryRepository.getAllByPresenter_Id(userId).orElseGet(List::of);
         }
 

@@ -32,19 +32,19 @@ public class UserController {
     }
 
     @GetMapping("/all")
-    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")
+    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION', 'ADMIN_PAGOS', 'ADMIN_REVISION')")
     public ResponseEntity<Page<UserResponseDTO>> getAll(Pageable pageable) {
         return ResponseEntity.ok(userService.getAll(pageable));
     }
 
-	@PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")
+	@PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION', 'ADMIN_PAGOS', 'ADMIN_REVISION')")
 	@GetMapping("/{id}")
 	public ResponseEntity<UserProfileDTO> getUser(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getById(id));
 	}
 
 	@PatchMapping("/{id}/status")
-    @PreAuthorize("hasRole('ADMIN_GENERAL')")
+    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_PAGOS')")
     public ResponseEntity<Void> updateStatus(
             @PathVariable Long id,
             @RequestBody CongressReviewDTO reviewDTO
@@ -54,7 +54,7 @@ public class UserController {
     }
 
 	@GetMapping("/{id}/files/payment")
-	@PreAuthorize("hasRole('ADMIN_GENERAL')")
+	@PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_PAGOS', 'ADMIN_REVISION')")
     public ResponseEntity<Resource> getPaymentFile(@PathVariable Long id) {
         Resource file = userService.getCongressFile(id, "payment");
         return ResponseEntity.ok()
@@ -63,7 +63,7 @@ public class UserController {
     }
 
 	@GetMapping("/{id}/files/student")
-	@PreAuthorize("hasRole('ADMIN_GENERAL')")
+	@PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_PAGOS', 'ADMIN_REVISION')")
 	public ResponseEntity<Resource> getStudentFile(@PathVariable Long id) {
         Resource file = userService.getCongressFile(id, "student");
         return ResponseEntity.ok()
@@ -157,7 +157,7 @@ public class UserController {
 	}
 
 	@GetMapping("/{id}/course-files/{courseId}/payment")
-	@PreAuthorize("hasRole('ADMIN_GENERAL')")
+	@PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_PAGOS', 'ADMIN_REVISION')")
 	public ResponseEntity<Resource> getUserCoursePaymentFile(
 			@PathVariable Long id,
 			@PathVariable Long courseId
@@ -169,7 +169,7 @@ public class UserController {
 	}
 
 	@PatchMapping("/{id}/course-payment/{courseId}/status")
-	@PreAuthorize("hasRole('ADMIN_GENERAL')")
+	@PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_PAGOS')")
 	public ResponseEntity<Void> updateCoursePaymentStatus(
 			@PathVariable Long id,
 			@PathVariable Long courseId,
@@ -182,7 +182,7 @@ public class UserController {
 
 	//controller for filtering candidates to
 	@GetMapping("/scholarship-candidates")
-	@PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")
+	@PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION', 'ADMIN_PAGOS', 'ADMIN_REVISION')")
 	public ResponseEntity<Page<UserResponseDTO>> getScholarshipCandidates(Pageable pageable) {
 		return ResponseEntity.ok(userService.scholarshipCandidates(pageable));
 	}
