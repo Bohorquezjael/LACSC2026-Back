@@ -1,27 +1,35 @@
 package com.innovawebJT.lacsc.service;
 
-import java.util.List;
-import java.util.Optional;
-
-import com.innovawebJT.lacsc.dto.UserResponseDTO;
+import com.innovawebJT.lacsc.dto.SummaryReviewDTO;
+import com.innovawebJT.lacsc.dto.SummaryUpdateRequestDTO;
+import com.innovawebJT.lacsc.enums.SpecialSessions;
+import com.innovawebJT.lacsc.model.Summary;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
-import com.innovawebJT.lacsc.model.Summary;
+import java.util.List;
 
 public interface ISummaryService {
 
-    Optional<Summary> getById(Long id);
+    Summary create(Summary summary, MultipartFile paymentFile);
 
-    void deleteSummary(Long id);
+    void reuploadPaymentProof(Long summaryId, MultipartFile file);
 
-    Page<Summary> getAllSummaries(Pageable pageable);
+    Page<Summary> getAll(Pageable pageable);
 
-    List<Summary> getSummariesByAuthorId(Long authorId);
+    Page<Summary> getMine(Pageable pageable);
 
-    Summary createSummary(Summary summary, Long authorId);
+    Summary getById(Long id);
 
-    List<Summary> getMySummaries();
+    Resource getPaymentResource(Long summaryId);
 
-    Summary createForCurrentUser(Summary summary);
+    void delete(Long id);
+
+    Summary updateInfo(Long id, SummaryUpdateRequestDTO request);
+
+    Summary reviewSummary(Long id, SummaryReviewDTO review);
+
+    List<Summary> getAllByUserId(Long id);
 }

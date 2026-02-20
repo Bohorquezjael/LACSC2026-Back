@@ -47,33 +47,44 @@ public class JwtRolesConverter implements Converter<Jwt, AbstractAuthenticationT
     }
 
     private Collection<GrantedAuthority> extractAuthoritiesRoles(Jwt jwt) {
-        Map<String, Object> resourceAccess;
-        Map<String, Object> resource;
-        Collection<String> roles;
 
-        if(jwt.getClaim("resource_access") == null){
-            return Stream.<GrantedAuthority>of().toList();
-        }
-        resourceAccess = jwt.getClaim("resource_access");
+        Collection<GrantedAuthority> authorities = Stream.<GrantedAuthority>empty().toList();
 
-        Object resourceObj = resourceAccess.get(resourceId);
-        if (!(resourceObj instanceof Map)) {
-            return Stream.<GrantedAuthority>of().toList();
-        }
-        resource = (Map<String, Object>) resourceObj;
+        Map<String, Object> realmAccess = jwt.getClaim("realm_access");
 
-        Object rolesObj = resource.get("roles");
-        if (!(rolesObj instanceof Collection)) {
-            return Stream.<GrantedAuthority>of().toList();
+        if (realmAccess != null && realmAccess.get("roles") instanceof Collection<?> rawRealmRoles) {
+
+            authorities = rawRealmRoles.stream()
+                    .filter(role -> role instanceof String)
+                    .map(role -> (String) role)
+                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                    .collect(Collectors.toList());
         }
-        // Ensure all elements are String
-        Collection<?> rawRoles = (Collection<?>) rolesObj;
-        roles = rawRoles.stream()
-                .filter(e -> e instanceof String)
-                .map(e -> (String) e)
-                .collect(Collectors.toList());
-        return roles.stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                .collect(Collectors.toList());
+
+        Map<String, Object> resourceAccess = jwt.getClaim("resource_access");
+
+        if (resourceAccess != null) {
+
+            Object resourceObj = resourceAccess.get(resourceId);
+
+            if (resourceObj instanceof Map<?, ?> resource) {
+
+                Object rolesObj = resource.get("roles");
+
+                if (rolesObj instanceof Collection<?> rawRoles) {
+
+                    authorities = Stream.concat(
+                            authorities.stream(),
+                            rawRoles.stream()
+                                    .filter(role -> role instanceof String)
+                                    .map(role -> (String) role)
+                                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                    ).collect(Collectors.toList());
+                }
+            }
+        }
+
+        return authorities;
     }
+
 }

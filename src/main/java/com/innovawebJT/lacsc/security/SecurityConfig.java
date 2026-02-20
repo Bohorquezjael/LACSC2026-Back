@@ -1,14 +1,17 @@
 package com.innovawebJT.lacsc.security;
 
+import jakarta.servlet.http.Cookie;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
 
 import lombok.RequiredArgsConstructor;
@@ -72,6 +75,7 @@ public SecurityFilterChain swaggerSecurityFilterChain(HttpSecurity httpSecurity)
         @Order(3)
         public SecurityFilterChain devSecurityFilterChain(HttpSecurity httpSecurity) throws Exception {
                 return httpSecurity
+                        .securityMatcher("/h2-console/**")
                         .cors(withDefaults())
                                 .csrf(AbstractHttpConfigurer::disable)
                                 .headers(headers -> headers
@@ -92,10 +96,11 @@ public SecurityFilterChain swaggerSecurityFilterChain(HttpSecurity httpSecurity)
 public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
     config.setAllowedOrigins(List.of(
-        "http://localhost:3000",
-        "http://127.0.0.1:3000"
-    ));
-    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://lacsc2026.enesmorelia.unam.mx"
+));
+    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
     config.setAllowCredentials(true);
 
@@ -103,4 +108,23 @@ public CorsConfigurationSource corsConfigurationSource() {
     source.registerCorsConfiguration("/**", config);
     return source;
 }
+
+    @Bean
+    public BearerTokenResolver bearerTokenResolver() {
+        return request -> {
+            String header = request.getHeader(HttpHeaders.AUTHORIZATION);
+            if (header != null && header.startsWith("Bearer ")) {
+                return header.substring(7);
+            }
+            if (request.getCookies() != null) {
+                for (Cookie c : request.getCookies()) {
+                    if ("access_token".equals(c.getName())) { // usa el mismo nombre que seteas en /auth/session
+                        return c.getValue();
+                    }
+                }
+            }
+            return null;
+        };
+    }
+
 }

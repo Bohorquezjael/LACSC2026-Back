@@ -1,6 +1,9 @@
 package com.innovawebJT.lacsc.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.innovawebJT.lacsc.enums.PresentationModality;
+import com.innovawebJT.lacsc.enums.SpecialSessions;
 import com.innovawebJT.lacsc.enums.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -8,7 +11,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,39 +20,48 @@ import org.hibernate.annotations.CreationTimestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
-@Table(name="Resumes")
+@Table(name="summaries")
 public class Summary {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(columnDefinition = "TEXT", nullable = false, unique = true)
     private String title;
 
+    @Column(columnDefinition = "TEXT")
     private String abstractDescription;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @Enumerated(EnumType.STRING)
     SpecialSessions specialSession;
 
+    @Enumerated(EnumType.STRING)
     PresentationModality presentationModality;
 
-    private boolean isSummaryPaymentVerified;
+    @Enumerated(EnumType.STRING)
+    private Status summaryPayment;
 
-    // cambiar por la persona que registra el resumen
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User author;
+    @Enumerated(EnumType.STRING)
+    private Status summaryStatus;
 
-    //! cambiar por una lista de autores tipo persona
-    @OneToMany(mappedBy = "summary", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<CoAuthor> coAuthors;
+     @OneToMany(
+        mappedBy = "summary",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true
+    )
+     @JsonManagedReference
+    private List<Author> authors;
 
-    private LocalDate presentationDate;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "presenter_user_id")
+    private User presenter;
+
+    private LocalDateTime presentationDateTime;
 
     private int presentationRoom;
-
-    private Status status;
 
     //la asignamos conforme la sala etc... unicamente se manda para el correo
     private String keyAbstract;
