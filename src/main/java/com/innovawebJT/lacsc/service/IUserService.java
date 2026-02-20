@@ -1,5 +1,6 @@
 package com.innovawebJT.lacsc.service;
 
+import com.innovawebJT.lacsc.dto.CongressReviewDTO;
 import com.innovawebJT.lacsc.dto.UserProfileDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
 import com.innovawebJT.lacsc.enums.Status;
@@ -32,7 +33,7 @@ public interface IUserService {
 
     UserProfileDTO getById(Long id);
 
-	void reviewUserRegistration(Long id, Status status, String message);
+	void reviewUserRegistration(Long id, CongressReviewDTO reviewDTO);
 
     Resource getCongressFile(Long id, String payment);
 
