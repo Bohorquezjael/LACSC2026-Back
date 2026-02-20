@@ -145,7 +145,7 @@
 
         @Override
         public Page<UserResponseDTO> getAll(Pageable pageable) {
-            if (SecurityUtils.isAdminGeneral()) {
+            if (SecurityUtils.isAdminGeneral() || SecurityUtils.isAdminPagos() || SecurityUtils.isAdminRevision()) {
                 return repository.findAll(pageable).map(this::mapToUserResponseDTO);
             }
 
