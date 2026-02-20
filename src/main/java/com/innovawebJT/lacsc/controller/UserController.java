@@ -142,6 +142,18 @@ public class UserController {
 				.body(file);
 	}
 
+	@PatchMapping("/{id}/course-payment/{courseId}/status")
+	@PreAuthorize("hasRole('ADMIN_GENERAL')")
+	public ResponseEntity<Void> updateCoursePaymentStatus(
+			@PathVariable Long id,
+			@PathVariable Long courseId,
+			@RequestParam Status status,
+			@RequestBody String message
+	) {
+		userService.reviewCoursePayment(id, courseId, status, message);
+		return ResponseEntity.noContent().build();
+	}
+
 	//controller for filtering candidates to
 	@GetMapping("/scholarship-candidates")
 	@PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")

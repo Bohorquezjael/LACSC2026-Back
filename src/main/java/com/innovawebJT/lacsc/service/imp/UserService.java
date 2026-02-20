@@ -320,9 +320,7 @@
                     .orElseThrow(() -> new UserNotFoundException("User not found"));
 
             boolean isOwner = targetUser.getKeycloakId().equals(SecurityUtils.getKeycloakId());
-            boolean isAdmin = SecurityContextHolder.getContext()
-                    .getAuthentication().getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN_GENERAL"));
+            boolean isAdmin = SecurityUtils.isAdminGeneral();
 
             if (!isOwner && !isAdmin) {
                 throw new AccessDeniedException("No tienes permiso para ver este archivo");
@@ -337,6 +335,31 @@
                 throw new RuntimeException("El archivo solicitado no existe");
             }
             return fileStorageService.load(path);
+        }
+
+        @Override
+        public void reviewCoursePayment(Long userId, Long courseId, Status status, String message) {
+            if (!SecurityUtils.isAdminGeneral()) {
+                throw new AccessDeniedException("Solo el administrador general puede revisar pagos");
+            }
+
+            CourseEnrollment enrollment = courseEnrollmentRepository
+                    .findByUserIdAndCourseId(userId, courseId)
+                    .orElseThrow(() -> new UserNotFoundException("Inscripción al curso no encontrada"));
+
+            enrollment.setPaymentStatus(status);
+            courseEnrollmentRepository.save(enrollment);
+
+            String emailBody;
+            if (Status.APPROVED.equals(status)) {
+                emailBody = "Tu pago para el curso '%s' ha sido aprobado.".formatted(enrollment.getCourse().getName());
+            } else {
+                emailBody = "Tu pago para el curso '%s' ha sido rechazado. Motivo: %s".formatted(enrollment.getCourse().getName(), message);
+            }
+
+            emailService.sendEmail(enrollment.getUser().getEmail(),
+                    "Actualización de Pago de Curso - LACSC 2026",
+                    emailBody);
         }
 
         @Override

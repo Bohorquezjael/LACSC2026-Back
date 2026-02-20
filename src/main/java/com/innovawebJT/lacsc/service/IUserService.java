@@ -48,5 +48,7 @@ public interface IUserService {
 
     Resource getCoursePaymentFile(Long userId, Long courseId);
 
+    void reviewCoursePayment(Long userId, Long courseId, Status status, String message);
+
     Page<UserResponseDTO> scholarshipCandidates(Pageable pageable);
 }
