@@ -4,7 +4,6 @@ import com.innovawebJT.lacsc.dto.CongressReviewDTO;
 import com.innovawebJT.lacsc.dto.UserProfileDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
 import com.innovawebJT.lacsc.enums.Status;
-import com.innovawebJT.lacsc.model.Course;
 import com.innovawebJT.lacsc.model.CourseEnrollment;
 import com.innovawebJT.lacsc.service.IUserService;
 import lombok.AllArgsConstructor;

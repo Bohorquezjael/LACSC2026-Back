@@ -4,7 +4,6 @@ import com.innovawebJT.lacsc.enums.PresentationModality;
 import com.innovawebJT.lacsc.enums.SpecialSessions;
 import com.innovawebJT.lacsc.enums.Status;
 import com.innovawebJT.lacsc.model.Author;
-import com.innovawebJT.lacsc.model.User;
 import lombok.Builder;
 
 import java.time.LocalDateTime;

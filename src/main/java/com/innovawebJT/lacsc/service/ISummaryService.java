@@ -3,15 +3,11 @@ package com.innovawebJT.lacsc.service;
 import com.innovawebJT.lacsc.dto.SummaryDTO;
 import com.innovawebJT.lacsc.dto.SummaryReviewDTO;
 import com.innovawebJT.lacsc.dto.SummaryUpdateRequestDTO;
-import com.innovawebJT.lacsc.enums.SpecialSessions;
 import com.innovawebJT.lacsc.model.Summary;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
-import java.util.Optional;
 
 public interface ISummaryService {
 

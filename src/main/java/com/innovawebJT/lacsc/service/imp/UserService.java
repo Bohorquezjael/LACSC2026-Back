@@ -12,7 +12,6 @@
     import com.innovawebJT.lacsc.repository.CourseEnrollmentRepository;
     import com.innovawebJT.lacsc.repository.CourseRepository;
     import com.innovawebJT.lacsc.repository.SummaryRepository;
-    import com.innovawebJT.lacsc.model.Summary;
     import com.innovawebJT.lacsc.repository.UserRepository;
     import com.innovawebJT.lacsc.security.SecurityUtils;
     import com.innovawebJT.lacsc.service.IUserService;
@@ -33,7 +32,6 @@
 
     import static com.innovawebJT.lacsc.util.Helpers.mapToUserResponseDTO;
     import static com.innovawebJT.lacsc.util.Helpers.mapToResponseDTO;
-    import static com.innovawebJT.lacsc.util.Helpers.mapToSummaryDTO;
 
 
     @Slf4j
@@ -48,10 +46,6 @@
         private final CourseEnrollmentRepository courseEnrollmentRepository;
         private final SummaryService summaryService;
         private final SummaryRepository summaryRepository;
-
-        private boolean hasAdminRole() {
-            return SecurityUtils.isAdminGeneral() || SecurityUtils.isAdminSesion() || SecurityUtils.isAdminPagos() || SecurityUtils.isAdminRevision();
-        }
 
         @Override
         public UserResponseDTO createOrUpdateProfile(String keycloakId, UserProfileDTO dto) {

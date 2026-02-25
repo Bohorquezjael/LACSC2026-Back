@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Optional;
 
 import static com.innovawebJT.lacsc.security.SecurityUtils.*;
 import static com.innovawebJT.lacsc.util.Helpers.mapToSummaryDTO;
