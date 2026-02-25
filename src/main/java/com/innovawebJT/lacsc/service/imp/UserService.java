@@ -1,9 +1,6 @@
     package com.innovawebJT.lacsc.service.imp;
 
-    import com.innovawebJT.lacsc.dto.CongressReviewDTO;
-    import com.innovawebJT.lacsc.dto.EmergencyContactDTO;
-    import com.innovawebJT.lacsc.dto.UserProfileDTO;
-    import com.innovawebJT.lacsc.dto.UserResponseDTO;
+    import com.innovawebJT.lacsc.dto.*;
     import com.innovawebJT.lacsc.enums.FileCategory;
     import com.innovawebJT.lacsc.enums.Status;
     import com.innovawebJT.lacsc.exception.DuplicateUserFieldException;
@@ -19,6 +16,7 @@
     import com.innovawebJT.lacsc.repository.UserRepository;
     import com.innovawebJT.lacsc.security.SecurityUtils;
     import com.innovawebJT.lacsc.service.IUserService;
+    import com.innovawebJT.lacsc.util.Helpers;
     import lombok.AllArgsConstructor;
     import lombok.extern.slf4j.Slf4j;
     import org.springframework.core.io.Resource;
@@ -32,6 +30,10 @@
     import java.util.List;
 
     import com.innovawebJT.lacsc.enums.SpecialSessions;
+
+    import static com.innovawebJT.lacsc.util.Helpers.mapToUserResponseDTO;
+    import static com.innovawebJT.lacsc.util.Helpers.mapToResponseDTO;
+    import static com.innovawebJT.lacsc.util.Helpers.mapToSummaryDTO;
 
 
     @Slf4j
@@ -145,17 +147,39 @@
 
         @Override
         public Page<UserResponseDTO> getAll(Pageable pageable) {
-            if (SecurityUtils.isAdminGeneral() || SecurityUtils.isAdminPagos() || SecurityUtils.isAdminRevision()) {
-                return repository.findAll(pageable).map(this::mapToUserResponseDTO);
+
+            if (SecurityUtils.isAdminGeneral()
+                    || SecurityUtils.isAdminPagos()
+                    || SecurityUtils.isAdminRevision()) {
+
+                Page<User> users = repository.findAll(pageable);
+
+                return users.map(user -> {
+                    SummaryCounterDTO counter =
+                            summaryService.getCountOfSummariesByUserId(user.getId());
+
+                    return mapToUserResponseDTO(user, counter);
+                });
             }
 
             if (SecurityUtils.isAdminSesion()) {
-                List<SpecialSessions> sessions = SecurityUtils.getAllowedSessionsFromRoles();
+
+                List<SpecialSessions> sessions =
+                        SecurityUtils.getAllowedSessionsFromRoles();
+
                 if (!sessions.isEmpty()) {
-                    return repository.findUsersBySpecialSessions(sessions, pageable)
-                            .map(this::mapToUserResponseDTO);
+
+                    return repository
+                            .findUsersBySpecialSessions(sessions, pageable)
+                            .map(user -> {
+                                SummaryCounterDTO counter =
+                                        summaryService.getCountOfSummariesByUserId(user.getId());
+
+                                return mapToUserResponseDTO(user, counter);
+                            });
                 }
             }
+
             return Page.empty(pageable);
         }
 
@@ -180,7 +204,7 @@
     }
 
     @Override
-    public UserProfileDTO getById(Long id) {
+    public UserProfileDTO getById(Long id, Pageable pageable) {
         User u = repository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
 
         if (!SecurityUtils.isAdminGeneral() && !SecurityUtils.isAdminSesion() && !SecurityUtils.isAdminPagos() && !SecurityUtils.isAdminRevision()) {
@@ -188,7 +212,7 @@
         }
 
         if (SecurityUtils.isAdminSesion()) {
-            List<Summary> userSummariesInAllowedSessions = summaryRepository.findAllByPresenter_IdAndSpecialSessionIn(u.getId(), SecurityUtils.getAllowedSessionsFromRoles());
+            Page<SummaryDTO> userSummariesInAllowedSessions = summaryRepository.findAllByPresenter_IdAndSpecialSessionIn(u.getId(), SecurityUtils.getAllowedSessionsFromRoles(), pageable).map(Helpers::mapToSummaryDTO);
 
             if (userSummariesInAllowedSessions.isEmpty()) {
                 throw new AccessDeniedException("No tienes permiso para ver este usuario");
@@ -291,10 +315,10 @@
             enrollment.setReferencePaymentFile(paymentPath);
             enrollment.setPaymentStatus(Status.PENDING);
 
-            if (user.getCourses() == null) {
-                user.setCourses(new HashSet<>());
+            if (user.getEnrollments() == null) {
+                user.setEnrollments(new HashSet<>());
             }
-            user.getCourses().add(course);
+            user.getEnrollments().add(enrollment);
 
             courseEnrollmentRepository.save(enrollment);
             repository.save(user);
@@ -433,52 +457,10 @@
         }
 
         @Override
-        public List<Course> getMyCourses() {
+        public List<CourseEnrollment> getMyCourses() {
             String keycloakId = SecurityUtils.getKeycloakId();
             User user = repository.findByKeycloakId(keycloakId)
                     .orElseThrow(() -> new UserNotFoundException("User not found"));
-            return List.copyOf(user.getCourses());
+            return List.copyOf(user.getEnrollments());
         }
-
-        private UserProfileDTO mapToResponseDTO(User user) {
-            return UserProfileDTO.builder()
-                    .name(user.getName())
-                    .surname(user.getSurname())
-                    .cellphone(user.getCellphone())
-                    .gender(user.getGender())
-                    .country(user.getCountry())
-                    .badgeName(user.getBadgeName())
-                    .email(user.getEmail())
-                    .category(user.getCategory())
-                    .institution(user.getInstitution())
-                    .emergencyContact(mapToResponseContactDTO(user.getEmergencyContact()))
-                    .status(user.getStatus())
-                    .createdAt(user.getCreatedAt())
-                    .referencePaymentFile(user.getReferencePaymentFile())
-                    .referenceStudentFile(user.getReferenceStudentFile())
-                    .build();
-        }
-
-        private UserResponseDTO mapToUserResponseDTO(User user) {
-            return UserResponseDTO.builder()
-                    .id(user.getId())
-                    .name(user.getName())
-                    .surname(user.getSurname())
-                    .email(user.getEmail())
-                    .status(user.getStatus())
-                    .institution(user.getInstitution())
-                    .category(user.getCategory())
-                    .summariesReviewed(summaryService.getCountOfSummariesByUserId(user.getId()))
-                    .build();
-        }
-
-        private EmergencyContactDTO mapToResponseContactDTO(EmergencyContact contact) {
-            return EmergencyContactDTO.builder()
-                    .fullName(contact.getName())
-                    .relationship(contact.getRelationship())
-                    .phone(contact.getCellphone())
-                    .build();
-        }
-
-
     }

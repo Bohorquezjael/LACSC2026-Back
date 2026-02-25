@@ -1,5 +1,6 @@
 package com.innovawebJT.lacsc.repository;
 
+import com.innovawebJT.lacsc.dto.SummaryDTO;
 import com.innovawebJT.lacsc.enums.SpecialSessions;
 import com.innovawebJT.lacsc.enums.Status;
 import com.innovawebJT.lacsc.model.Summary;
@@ -45,9 +46,9 @@ public interface SummaryRepository extends JpaRepository<Summary, Long> {
         Pageable pageable
     );
 
-    Optional<List<Summary>> getAllByPresenter_Id(Long id);
+    Page<Summary> getAllByPresenter_Id(Long id, Pageable pageable);
 
-    Optional<List<Summary>> getAllByPresenter_IdAndSummaryPayment(Long id, Status status);
+    List<Summary> getAllByPresenter_IdAndSummaryPayment(Long id, Status status);
 
     @Query("SELECT COUNT(s) FROM Summary s WHERE s.presenter.id = :presenterId AND s.summaryPayment = :summaryPayment")
     int countAllByPresenter_IdAndSummaryPayment(@Param("presenterId") Long presenterId, @Param("summaryPayment") Status summaryPayment);
@@ -66,5 +67,5 @@ public interface SummaryRepository extends JpaRepository<Summary, Long> {
 
     Page<Summary> findBySpecialSessionIn(List<SpecialSessions> specialSessions, Pageable pageable);
 
-    List<Summary> findAllByPresenter_IdAndSpecialSessionIn(Long userId, List<SpecialSessions> sessions);
+    Page<Summary> findAllByPresenter_IdAndSpecialSessionIn(Long userId, List<SpecialSessions> sessions, Pageable pageable);
 }

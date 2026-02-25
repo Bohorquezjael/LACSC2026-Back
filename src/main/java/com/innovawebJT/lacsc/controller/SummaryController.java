@@ -1,5 +1,6 @@
 package com.innovawebJT.lacsc.controller;
 
+import com.innovawebJT.lacsc.dto.SummaryDTO;
 import com.innovawebJT.lacsc.dto.SummaryReviewDTO;
 import com.innovawebJT.lacsc.dto.SummaryUpdateRequestDTO;
 import com.innovawebJT.lacsc.model.Summary;
@@ -28,13 +29,13 @@ public class SummaryController {
     /* ===================== CREATE ===================== */
 
     @PostMapping(consumes = "multipart/form-data")
-    public ResponseEntity<Summary> create(
+    public ResponseEntity<SummaryDTO> create(
             @RequestPart("summary") Summary summary,
             @RequestPart("paymentFile") MultipartFile paymentFile
     ) {
-        Summary created = summaryService.create(summary, paymentFile);
+        SummaryDTO created = summaryService.create(summary, paymentFile);
         return ResponseEntity
-                .created(URI.create("/api/summaries/" + created.getId()))
+                .created(URI.create("/api/summaries/" + created.id()))
                 .body(created);
     }
 
@@ -42,7 +43,7 @@ public class SummaryController {
 
     @PatchMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")
-    public ResponseEntity<Summary> updateInfo(
+    public ResponseEntity<SummaryDTO> updateInfo(
             @PathVariable Long id,
             @RequestBody SummaryUpdateRequestDTO request
     ) {
@@ -53,7 +54,7 @@ public class SummaryController {
 
     @PatchMapping("/{id}/review")
     @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION', 'ADMIN_PAGOS')")
-    public ResponseEntity<Summary> review(
+    public ResponseEntity<SummaryDTO> review(
             @PathVariable Long id,
             @RequestBody SummaryReviewDTO review
     ) {
@@ -78,31 +79,29 @@ public class SummaryController {
 
     @GetMapping("/all")
     @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION', 'ADMIN_PAGOS', 'ADMIN_REVISION')")
-    public ResponseEntity<Page<Summary>> all(Pageable pageable) {
+    public ResponseEntity<Page<SummaryDTO>> all(Pageable pageable) {
         return ResponseEntity.ok(summaryService.getAll(pageable));
     }
 
     @GetMapping("{userId}/all")
     @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION', 'ADMIN_PAGOS', 'ADMIN_REVISION')")
-    public ResponseEntity<List<Summary>> allByUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(summaryService.getAllByUserId(userId));
+    public ResponseEntity<Page<SummaryDTO>> allByUser(@PathVariable Long userId, Pageable pageable) {
+        return ResponseEntity.ok(summaryService.getAllByUserId(userId, pageable));
     }
 
     @GetMapping("/me")
-    public ResponseEntity<Page<Summary>> mine(Pageable pageable) {
+    public ResponseEntity<Page<SummaryDTO>> mine(Pageable pageable) {
         return ResponseEntity.ok(summaryService.getMine(pageable));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION', 'ADMIN_PAGOS', 'ADMIN_REVISION')")
-    public ResponseEntity<Summary> byId(@PathVariable Long id) {
+    public ResponseEntity<SummaryDTO> byId(@PathVariable Long id) {
         return ResponseEntity.ok(summaryService.getById(id));
     }
 
     @GetMapping("/{id}/payment-file")
     public ResponseEntity<Resource> getPaymentFile(@PathVariable Long id) {
-        Summary summary = summaryService.getById(id);
-
         Resource file = summaryService.getPaymentResource(id);
 
         return ResponseEntity.ok()

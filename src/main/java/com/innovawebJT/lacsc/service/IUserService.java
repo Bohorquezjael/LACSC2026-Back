@@ -5,6 +5,7 @@ import com.innovawebJT.lacsc.dto.UserProfileDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
 import com.innovawebJT.lacsc.enums.Status;
 import com.innovawebJT.lacsc.model.Course;
+import com.innovawebJT.lacsc.model.CourseEnrollment;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,7 +32,7 @@ public interface IUserService {
 
     UserProfileDTO getCurrentUser();
 
-    UserProfileDTO getById(Long id);
+    UserProfileDTO getById(Long id, Pageable pageable);
 
 	void reviewUserRegistration(Long id, CongressReviewDTO reviewDTO);
 
@@ -39,7 +40,7 @@ public interface IUserService {
 
     void enrollToCongress(MultipartFile paymentFile, MultipartFile studentFile);
 
-    List<Course> getMyCourses();
+    List<CourseEnrollment> getMyCourses();
 
     Resource getMyCongressFile(String type);
 

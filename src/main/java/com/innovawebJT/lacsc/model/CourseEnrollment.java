@@ -1,5 +1,6 @@
 package com.innovawebJT.lacsc.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.innovawebJT.lacsc.enums.Status;
 import jakarta.persistence.*;
 import lombok.*;
@@ -20,10 +21,12 @@ public class CourseEnrollment {
 
 	@ManyToOne(optional = false, fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id")
+	@JsonBackReference
 	private User user;
 
 	@ManyToOne(optional = false, fetch = FetchType.LAZY)
 	@JoinColumn(name = "course_id")
+	@JsonBackReference
 	private Course course;
 
 	private String referencePaymentFile;

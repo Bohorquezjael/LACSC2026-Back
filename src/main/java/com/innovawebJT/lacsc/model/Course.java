@@ -1,5 +1,7 @@
 package com.innovawebJT.lacsc.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.innovawebJT.lacsc.enums.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -24,6 +26,7 @@ public class Course {
 
 	private String name;
 
-	@ManyToMany(mappedBy = "courses", fetch = FetchType.LAZY)
-	private Set<User> users = new HashSet<>();
+	@OneToMany(mappedBy = "course")
+	@JsonManagedReference
+	private Set<CourseEnrollment> enrollments;
 }

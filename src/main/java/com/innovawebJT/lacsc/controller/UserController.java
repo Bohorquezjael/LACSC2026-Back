@@ -5,6 +5,7 @@ import com.innovawebJT.lacsc.dto.UserProfileDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
 import com.innovawebJT.lacsc.enums.Status;
 import com.innovawebJT.lacsc.model.Course;
+import com.innovawebJT.lacsc.model.CourseEnrollment;
 import com.innovawebJT.lacsc.service.IUserService;
 import lombok.AllArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -39,8 +40,8 @@ public class UserController {
 
 	@PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION', 'ADMIN_PAGOS', 'ADMIN_REVISION')")
 	@GetMapping("/{id}")
-	public ResponseEntity<UserProfileDTO> getUser(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.getById(id));
+	public ResponseEntity<UserProfileDTO> getUser(@PathVariable Long id, Pageable pageable) {
+        return ResponseEntity.ok(userService.getById(id, pageable));
 	}
 
 	@PatchMapping("/{id}/status")
@@ -73,7 +74,7 @@ public class UserController {
 
 	@GetMapping("/me/courses")
 	@PreAuthorize("isAuthenticated()")
-	public ResponseEntity<List<Course>> myCourses() {
+	public ResponseEntity<List<CourseEnrollment>> myCourses() {
 		return ResponseEntity.ok(userService.getMyCourses());
 	}
 

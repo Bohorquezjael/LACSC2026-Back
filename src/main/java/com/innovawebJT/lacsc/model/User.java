@@ -1,6 +1,7 @@
 package com.innovawebJT.lacsc.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.innovawebJT.lacsc.enums.Category;
 import com.innovawebJT.lacsc.enums.Status;
 import jakarta.persistence.*;
@@ -65,14 +66,9 @@ public class User {
 
 	private String referenceStudentFile;
 
-	@ManyToMany(fetch = FetchType.LAZY)
-	@JoinTable(
-			name = "user_courses",
-			joinColumns = @JoinColumn(name = "user_id"),
-			inverseJoinColumns = @JoinColumn(name = "course_id")
-	)
-	@Builder.Default
-	private Set<Course> courses = new HashSet<>();
+	@OneToMany(mappedBy = "user")
+	@JsonManagedReference
+	private Set<CourseEnrollment> enrollments;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
