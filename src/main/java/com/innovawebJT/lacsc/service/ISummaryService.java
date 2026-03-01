@@ -1,8 +1,6 @@
 package com.innovawebJT.lacsc.service;
 
-import com.innovawebJT.lacsc.dto.SummaryDTO;
-import com.innovawebJT.lacsc.dto.SummaryReviewDTO;
-import com.innovawebJT.lacsc.dto.SummaryUpdateRequestDTO;
+import com.innovawebJT.lacsc.dto.*;
 import com.innovawebJT.lacsc.model.Summary;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -26,6 +24,10 @@ public interface ISummaryService {
     void delete(Long id);
 
     SummaryDTO updateInfo(Long id, SummaryUpdateRequestDTO request);
+
+    SummaryDTO updateModality(Long id, SummaryModalityDTO request);
+
+    SummaryDTO updateSchedule(Long id, SummaryScheduleDTO request);
 
     SummaryDTO reviewSummary(Long id, SummaryReviewDTO review);
 

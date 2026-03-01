@@ -9,7 +9,7 @@ public record SummaryUpdateRequestDTO (
 
     PresentationModality presentationModality,
     LocalDateTime presentationDateTime,
-    int presentationRoom,
+    String presentationRoom,
     List<AuthorRequestDTO> authors
 ){
 }

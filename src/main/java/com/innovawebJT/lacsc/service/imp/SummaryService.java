@@ -1,9 +1,6 @@
 package com.innovawebJT.lacsc.service.imp;
 
-import com.innovawebJT.lacsc.dto.SummaryCounterDTO;
-import com.innovawebJT.lacsc.dto.SummaryDTO;
-import com.innovawebJT.lacsc.dto.SummaryReviewDTO;
-import com.innovawebJT.lacsc.dto.SummaryUpdateRequestDTO;
+import com.innovawebJT.lacsc.dto.*;
 import com.innovawebJT.lacsc.enums.FileCategory;
 import com.innovawebJT.lacsc.enums.SpecialSessions;
 import com.innovawebJT.lacsc.enums.ReviewType;
@@ -23,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Objects;
 
 import static com.innovawebJT.lacsc.security.SecurityUtils.*;
 import static com.innovawebJT.lacsc.util.Helpers.mapToSummaryDTO;
@@ -209,7 +207,7 @@ public class SummaryService implements ISummaryService {
             if (request.presentationDateTime() != null && !request.presentationDateTime().equals(summary.getPresentationDateTime())) {
                 throw new AccessDeniedException("No tiene permisos para modificar la fecha/hora de la presentación");
             }
-            if (request.presentationRoom() != 0 && request.presentationRoom() != summary.getPresentationRoom()) {
+            if (!Objects.equals(request.presentationRoom(), "") && !Objects.equals(request.presentationRoom(), summary.getPresentationRoom())) {
                 throw new AccessDeniedException("No tiene permisos para modificar la sala de la presentación");
             }
             if (request.authors() != null && !request.authors().isEmpty()) {
@@ -228,6 +226,37 @@ public class SummaryService implements ISummaryService {
         }
 
         throw new AccessDeniedException("No tiene permisos para realizar esta acción");
+    }
+
+    @Override
+    public SummaryDTO updateSchedule(Long id, SummaryScheduleDTO request) {
+
+        Summary summary = summaryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Resumen no encontrado"));
+
+        summary.setPresentationDateTime(request.presentationDateTime());
+        summary.setPresentationRoom(request.presentationRoom());
+
+        Summary saved = summaryRepository.save(summary);
+
+        sendScheduleEmail(summary);
+
+        return mapToSummaryDTO(saved);
+    }
+
+    @Override
+    public SummaryDTO updateModality(Long id, SummaryModalityDTO request) {
+
+        Summary summary = summaryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Resumen no encontrado"));
+
+        summary.setPresentationModality(request.presentationModality());
+
+        Summary saved = summaryRepository.save(summary);
+
+        sendModalityEmail(summary);
+
+        return mapToSummaryDTO(saved);
     }
 
     @Override
@@ -408,5 +437,43 @@ public class SummaryService implements ISummaryService {
         }
 
         emailService.sendEmail(userEmail, subject, message);
+    }
+
+    private void sendScheduleEmail(Summary summary) {
+
+        String message = """
+            Hola, tu resumen "%s" ha sido reprogramado.
+            Fecha: %s
+            Hora: %s
+            Sala: %s
+            """.formatted(
+                summary.getTitle(),
+                summary.getPresentationDateTime().toLocalDate(),
+                summary.getPresentationDateTime().toLocalTime(),
+                summary.getPresentationRoom()
+        );
+
+        emailService.sendEmail(
+                summary.getPresenter().getEmail(),
+                "Actualización de agenda - LACSC 2026",
+                message
+        );
+    }
+
+    private void sendModalityEmail(Summary summary) {
+
+        String message = """
+            Hola, tu resumen "%s" ha cambiado de modalidad.
+            Nueva modalidad: %s
+            """.formatted(
+                summary.getTitle(),
+                summary.getPresentationModality()
+        );
+
+        emailService.sendEmail(
+                summary.getPresenter().getEmail(),
+                "Actualización de modalidad - LACSC 2026",
+                message
+        );
     }
 }

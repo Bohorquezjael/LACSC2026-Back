@@ -61,7 +61,7 @@ public class Summary {
 
     private LocalDateTime presentationDateTime;
 
-    private int presentationRoom;
+    private String presentationRoom;
 
     //la asignamos conforme la sala etc... unicamente se manda para el correo
     private String keyAbstract;

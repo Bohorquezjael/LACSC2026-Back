@@ -1,6 +1,7 @@
 package com.innovawebJT.lacsc.util;
 
 import com.innovawebJT.lacsc.dto.*;
+import com.innovawebJT.lacsc.model.CourseEnrollment;
 import com.innovawebJT.lacsc.model.EmergencyContact;
 import com.innovawebJT.lacsc.model.Summary;
 import com.innovawebJT.lacsc.model.User;
@@ -63,6 +64,15 @@ public class Helpers {
 				.createdAt(user.getCreatedAt())
 				.referencePaymentFile(user.getReferencePaymentFile())
 				.referenceStudentFile(user.getReferenceStudentFile())
+				.build();
+	}
+
+	public static CourseEnrollmentDTO mapToDTO(CourseEnrollment e) {
+		return CourseEnrollmentDTO.builder()
+				.enrollmentId(e.getId())
+				.courseId(e.getCourse().getId())
+				.paymentStatus(e.getPaymentStatus())
+				.referencePaymentFile(e.getReferencePaymentFile())
 				.build();
 	}
 }

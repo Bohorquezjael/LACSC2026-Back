@@ -21,7 +21,7 @@ public record SummaryDTO(
 		List<Author> authors,
 		UserProfileDTO presenter,
 		LocalDateTime presentationDateTime,
-		int presentationRoom,
+		String presentationRoom,
 		String keyAbstract,
 		String referencePaymentFile,
 		LocalDateTime createdAt

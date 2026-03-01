@@ -451,10 +451,23 @@
         }
 
         @Override
-        public List<CourseEnrollment> getMyCourses() {
+        public List<CourseEnrollmentDTO> getMyCourses() {
             String keycloakId = SecurityUtils.getKeycloakId();
+
             User user = repository.findByKeycloakId(keycloakId)
                     .orElseThrow(() -> new UserNotFoundException("User not found"));
-            return List.copyOf(user.getEnrollments());
+
+            return user.getEnrollments()
+                    .stream()
+                    .map(Helpers::mapToDTO)
+                    .toList();
+        }
+
+        public List<CourseEnrollmentDTO> getUserCourses(Long userId) {
+            User user = repository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+            return user.getEnrollments()
+                    .stream()
+                    .map(Helpers::mapToDTO)
+                    .toList();
         }
     }

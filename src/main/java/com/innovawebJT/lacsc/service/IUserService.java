@@ -1,6 +1,7 @@
 package com.innovawebJT.lacsc.service;
 
 import com.innovawebJT.lacsc.dto.CongressReviewDTO;
+import com.innovawebJT.lacsc.dto.CourseEnrollmentDTO;
 import com.innovawebJT.lacsc.dto.UserProfileDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
 import com.innovawebJT.lacsc.enums.Status;
@@ -39,7 +40,9 @@ public interface IUserService {
 
     void enrollToCongress(MultipartFile paymentFile, MultipartFile studentFile);
 
-    List<CourseEnrollment> getMyCourses();
+    List<CourseEnrollmentDTO> getMyCourses();
+
+    List<CourseEnrollmentDTO> getUserCourses(Long id);
 
     Resource getMyCongressFile(String type);
 

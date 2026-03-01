@@ -1,6 +1,7 @@
 package com.innovawebJT.lacsc.controller;
 
 import com.innovawebJT.lacsc.dto.CongressReviewDTO;
+import com.innovawebJT.lacsc.dto.CourseEnrollmentDTO;
 import com.innovawebJT.lacsc.dto.UserProfileDTO;
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
 import com.innovawebJT.lacsc.enums.Status;
@@ -73,8 +74,14 @@ public class UserController {
 
 	@GetMapping("/me/courses")
 	@PreAuthorize("isAuthenticated()")
-	public ResponseEntity<List<CourseEnrollment>> myCourses() {
+	public ResponseEntity<List<CourseEnrollmentDTO>> myCourses() {
 		return ResponseEntity.ok(userService.getMyCourses());
+	}
+
+	@GetMapping("/{id}/courses")
+	@PreAuthorize("isAuthenticated()")
+	public ResponseEntity<List<CourseEnrollmentDTO>> getUserCourses(@PathVariable Long id) {
+		return ResponseEntity.ok(userService.getUserCourses(id));
 	}
 
 	@GetMapping("/me/files/payment")

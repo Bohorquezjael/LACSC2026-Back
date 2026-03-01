@@ -1,8 +1,6 @@
 package com.innovawebJT.lacsc.controller;
 
-import com.innovawebJT.lacsc.dto.SummaryDTO;
-import com.innovawebJT.lacsc.dto.SummaryReviewDTO;
-import com.innovawebJT.lacsc.dto.SummaryUpdateRequestDTO;
+import com.innovawebJT.lacsc.dto.*;
 import com.innovawebJT.lacsc.model.Summary;
 import com.innovawebJT.lacsc.service.ISummaryService;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +46,31 @@ public class SummaryController {
     ) {
         return ResponseEntity.ok(
                 summaryService.updateInfo(id, request)
+        );
+    }
+
+    /* ===================== UPDATE MODALITY ===================== */
+
+    @PatchMapping("/{id}/modality")
+    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")
+    public ResponseEntity<SummaryDTO> updateModality(
+            @PathVariable Long id,
+            @RequestBody SummaryModalityDTO request
+    ) {
+        return ResponseEntity.ok(
+                summaryService.updateModality(id, request));
+    }
+
+    /* ===================== UPDATE SCHEDULE AND ROOM ===================== */
+
+    @PatchMapping("/{id}/schedule")
+    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")
+    public ResponseEntity<SummaryDTO> updateSchedule(
+            @PathVariable Long id,
+            @RequestBody SummaryScheduleDTO request
+    ) {
+        return ResponseEntity.ok(
+                summaryService.updateSchedule(id, request)
         );
     }
 
