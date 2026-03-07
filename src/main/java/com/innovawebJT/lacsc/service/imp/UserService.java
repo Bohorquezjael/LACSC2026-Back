@@ -151,8 +151,11 @@
                 return users.map(user -> {
                     SummaryCounterDTO counter =
                             summaryService.getCountOfSummariesByUserId(user.getId());
+                    CourseCounterDTO courseCounter =
+                            getCountOfCoursesByUserId(user.getId());
 
-                    return mapToUserResponseDTO(user, counter);
+
+                    return mapToUserResponseDTO(user, counter, courseCounter);
                 });
             }
 
@@ -168,8 +171,11 @@
                             .map(user -> {
                                 SummaryCounterDTO counter =
                                         summaryService.getCountOfSummariesByUserId(user.getId());
+                                CourseCounterDTO courseCounter =
+                                        getCountOfCoursesByUserId(user.getId());
 
-                                return mapToUserResponseDTO(user, counter);
+
+                                return mapToUserResponseDTO(user, counter, courseCounter);
                             });
                 }
             }
@@ -469,5 +475,31 @@
                     .stream()
                     .map(Helpers::mapToDTO)
                     .toList();
+        }
+
+        @Override
+        public CourseCounterDTO getCountOfCoursesByUserId(Long userId) {
+
+            long approved;
+            long total;
+
+            if (SecurityUtils.isAdminPagos() || SecurityUtils.isAdminGeneral() || SecurityUtils.isAdminRevision() || SecurityUtils.isAdminSesion()) {
+
+                approved = courseEnrollmentRepository
+                        .countAllByUser_IdAndPaymentStatus(userId, Status.APPROVED);
+
+                total = courseEnrollmentRepository
+                        .countAllByUser_Id(userId);
+
+            } else {
+
+                approved = 0;
+                total = 0;
+            }
+
+            return CourseCounterDTO.builder()
+                    .approvedCourses(approved)
+                    .totalCourses(total)
+                    .build();
         }
     }

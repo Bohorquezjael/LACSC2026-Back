@@ -1,10 +1,7 @@
 package com.innovawebJT.lacsc.service.imp;
 
 import com.innovawebJT.lacsc.dto.*;
-import com.innovawebJT.lacsc.enums.FileCategory;
-import com.innovawebJT.lacsc.enums.SpecialSessions;
-import com.innovawebJT.lacsc.enums.ReviewType;
-import com.innovawebJT.lacsc.enums.Status;
+import com.innovawebJT.lacsc.enums.*;
 import com.innovawebJT.lacsc.model.Summary;
 import com.innovawebJT.lacsc.model.User;
 import com.innovawebJT.lacsc.repository.SummaryRepository;
@@ -15,9 +12,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Objects;
@@ -234,6 +233,24 @@ public class SummaryService implements ISummaryService {
         Summary summary = summaryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Resumen no encontrado"));
 
+        if (summary.getPresentationModality() == PresentationModality.ORAL) {
+
+            boolean exists = summaryRepository
+                    .existsByPresentationDateTimeAndPresentationRoomAndPresentationModalityAndIdNot(
+                            request.presentationDateTime(),
+                            request.presentationRoom(),
+                            PresentationModality.ORAL,
+                            id
+                    );
+
+            if (exists) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "La sala ya está ocupada en ese horario"
+                );
+            }
+        }
+
         summary.setPresentationDateTime(request.presentationDateTime());
         summary.setPresentationRoom(request.presentationRoom());
 
@@ -251,6 +268,11 @@ public class SummaryService implements ISummaryService {
                 .orElseThrow(() -> new RuntimeException("Resumen no encontrado"));
 
         summary.setPresentationModality(request.presentationModality());
+
+        if (request.presentationModality() == PresentationModality.POSTER) {
+            summary.setPresentationDateTime(null);
+            summary.setPresentationRoom(null);
+        }
 
         Summary saved = summaryRepository.save(summary);
 

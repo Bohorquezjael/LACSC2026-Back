@@ -24,6 +24,6 @@ public class Course {
 	private String name;
 
 	@OneToMany(mappedBy = "course")
-	@JsonManagedReference
+	@JsonManagedReference("course-enrollments")
 	private Set<CourseEnrollment> enrollments;
 }

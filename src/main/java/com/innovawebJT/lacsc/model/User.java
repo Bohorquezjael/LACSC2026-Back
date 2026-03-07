@@ -66,7 +66,7 @@ public class User {
 	private String referenceStudentFile;
 
 	@OneToMany(mappedBy = "user")
-	@JsonManagedReference
+	@JsonManagedReference("user-enrollments")
 	private Set<CourseEnrollment> enrollments;
 
 	@Enumerated(EnumType.STRING)

@@ -21,12 +21,12 @@ public class CourseEnrollment {
 
 	@ManyToOne(optional = false, fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id")
-	@JsonBackReference
+	@JsonBackReference("user-enrollments")
 	private User user;
 
 	@ManyToOne(optional = false, fetch = FetchType.LAZY)
 	@JoinColumn(name = "course_id")
-	@JsonBackReference
+	@JsonBackReference("course-enrollments")
 	private Course course;
 
 	private String referencePaymentFile;

@@ -64,7 +64,7 @@ public class SummaryController {
     /* ===================== UPDATE SCHEDULE AND ROOM ===================== */
 
     @PatchMapping("/{id}/schedule")
-    @PreAuthorize("hasAnyRole('ADMIN_GENERAL', 'ADMIN_SESSION')")
+    @PreAuthorize("hasAnyRole('ADMIN_GENERAL')")
     public ResponseEntity<SummaryDTO> updateSchedule(
             @PathVariable Long id,
             @RequestBody SummaryScheduleDTO request

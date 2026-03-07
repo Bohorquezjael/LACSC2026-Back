@@ -35,7 +35,7 @@ public class Helpers {
 				.build();
 	}
 
-	public static UserResponseDTO mapToUserResponseDTO(User user, SummaryCounterDTO summaryCounter) {
+	public static UserResponseDTO mapToUserResponseDTO(User user, SummaryCounterDTO summaryCounter, CourseCounterDTO courseCounter) {
 		return UserResponseDTO.builder()
 				.id(user.getId())
 				.name(user.getName())
@@ -45,6 +45,7 @@ public class Helpers {
 				.institution(user.getInstitution())
 				.category(user.getCategory())
 				.summariesReviewed(summaryCounter)
+				.courseReviewed(courseCounter)
 				.build();
 	}
 

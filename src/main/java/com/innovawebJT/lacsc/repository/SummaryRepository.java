@@ -1,5 +1,6 @@
 package com.innovawebJT.lacsc.repository;
 
+import com.innovawebJT.lacsc.enums.PresentationModality;
 import com.innovawebJT.lacsc.enums.SpecialSessions;
 import com.innovawebJT.lacsc.enums.Status;
 import com.innovawebJT.lacsc.model.Summary;
@@ -11,6 +12,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -67,4 +69,11 @@ public interface SummaryRepository extends JpaRepository<Summary, Long> {
     Page<Summary> findBySpecialSessionIn(List<SpecialSessions> specialSessions, Pageable pageable);
 
     Page<Summary> findAllByPresenter_IdAndSpecialSessionIn(Long userId, List<SpecialSessions> sessions, Pageable pageable);
+
+    boolean existsByPresentationDateTimeAndPresentationRoomAndPresentationModalityAndIdNot(
+            LocalDateTime presentationDateTime,
+            String presentationRoom,
+            PresentationModality presentationModality,
+            Long id
+    );
 }

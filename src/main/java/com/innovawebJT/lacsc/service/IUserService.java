@@ -1,9 +1,6 @@
 package com.innovawebJT.lacsc.service;
 
-import com.innovawebJT.lacsc.dto.CongressReviewDTO;
-import com.innovawebJT.lacsc.dto.CourseEnrollmentDTO;
-import com.innovawebJT.lacsc.dto.UserProfileDTO;
-import com.innovawebJT.lacsc.dto.UserResponseDTO;
+import com.innovawebJT.lacsc.dto.*;
 import com.innovawebJT.lacsc.enums.Status;
 import com.innovawebJT.lacsc.model.CourseEnrollment;
 import org.springframework.core.io.Resource;
@@ -43,6 +40,8 @@ public interface IUserService {
     List<CourseEnrollmentDTO> getMyCourses();
 
     List<CourseEnrollmentDTO> getUserCourses(Long id);
+
+    CourseCounterDTO getCountOfCoursesByUserId(Long userId);
 
     Resource getMyCongressFile(String type);
 
