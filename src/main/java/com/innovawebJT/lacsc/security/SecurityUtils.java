@@ -21,6 +21,19 @@ public final class SecurityUtils {
         throw new IllegalStateException("User not authenticated");
     }
 
+    public static String getEmail() {
+        Object principal = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        if (principal instanceof Jwt jwt) {
+            return jwt.getClaim("email");
+        }
+
+        return "unknown";
+    }
+
     public static boolean hasRole(String role) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         System.out.println("Authorities");

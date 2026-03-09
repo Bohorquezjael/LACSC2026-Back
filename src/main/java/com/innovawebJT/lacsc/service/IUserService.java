@@ -2,7 +2,6 @@ package com.innovawebJT.lacsc.service;
 
 import com.innovawebJT.lacsc.dto.*;
 import com.innovawebJT.lacsc.enums.Status;
-import com.innovawebJT.lacsc.model.CourseEnrollment;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

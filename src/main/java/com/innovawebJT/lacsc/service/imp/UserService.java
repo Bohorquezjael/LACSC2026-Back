@@ -1,5 +1,6 @@
     package com.innovawebJT.lacsc.service.imp;
 
+    import com.innovawebJT.lacsc.audit.Audit;
     import com.innovawebJT.lacsc.dto.*;
     import com.innovawebJT.lacsc.enums.FileCategory;
     import com.innovawebJT.lacsc.enums.Status;
@@ -47,6 +48,7 @@
         private final SummaryService summaryService;
         private final SummaryRepository summaryRepository;
 
+        @Audit(action = "UPDATE_PROFILE", entity = "USER")
         @Override
         public UserResponseDTO createOrUpdateProfile(String keycloakId, UserProfileDTO dto) {
 
@@ -107,6 +109,8 @@
             }
         }
 
+        @Audit(action = "REVIEW_CONGRESS_REGISTRATION", entity = "USER")
+        @Override
         public void reviewUserRegistration(Long userId, CongressReviewDTO dto) {
             if (!SecurityUtils.isAdminGeneral() && !SecurityUtils.isAdminPagos()) {
                 throw new AccessDeniedException("No tienes permiso para realizar esta acción");
@@ -183,6 +187,7 @@
             return Page.empty(pageable);
         }
 
+        @Audit(action = "DELETE_USER", entity = "USER")
         @Override
         public boolean deleteUser(Long id) {
             if (repository.existsById(id)) {
@@ -221,6 +226,8 @@
         return mapToResponseDTO(u);
     }
 
+        @Audit(action = "ENROLL_CONGRESS", entity = "USER")
+        @Override
         public void enrollToCongress(MultipartFile paymentFile, MultipartFile studentFile) {
             String keycloakId = SecurityUtils.getKeycloakId();
             User user = repository.findByKeycloakId(keycloakId)
@@ -253,6 +260,8 @@
                 "Hemos recibido tus comprobantes. En breve un administrador revisará tu pago.");
         }
 
+        @Audit(action = "DOWNLOAD_CONGRESS_FILE", entity = "USER")
+        @Override
         public Resource getCongressFile(Long userId, String type) {
             User user = repository.findById(userId)
                     .orElseThrow(() -> new UserNotFoundException("User not found"));
@@ -274,6 +283,7 @@
             return fileStorageService.load(path);
         }
 
+        @Audit(action = "DOWNLOAD_MY_CONGRESS_FILE", entity = "USER")
         @Override
         public Resource getMyCongressFile(String type) {
             String keycloakId = SecurityUtils.getKeycloakId();
@@ -289,6 +299,7 @@
             return fileStorageService.load(path);
         }
 
+        @Audit(action = "ENROLL_COURSE", entity = "COURSE")
         @Override
         public void enrollCurrentUserToCourse(Long courseId, MultipartFile paymentFile) {
             String keycloakId = SecurityUtils.getKeycloakId();
@@ -324,6 +335,7 @@
             repository.save(user);
         }
 
+        @Audit(action = "DOWNLOAD_MY_COURSE_PAYMENT", entity = "COURSE")
         @Override
         public Resource getMyCoursePaymentFile(Long courseId) {
             String keycloakId = SecurityUtils.getKeycloakId();
@@ -341,6 +353,7 @@
             return fileStorageService.load(path);
         }
 
+        @Audit(action = "DOWNLOAD_COURSE_PAYMENT", entity = "COURSE")
         @Override
         public Resource getCoursePaymentFile(Long userId, Long courseId) {
             User targetUser = repository.findById(userId)
@@ -364,6 +377,7 @@
             return fileStorageService.load(path);
         }
 
+        @Audit(action = "REVIEW_COURSE_PAYMENT", entity = "COURSE")
         @Override
         public void reviewCoursePayment(Long userId, Long courseId, Status status, String message) {
             if (!SecurityUtils.isAdminGeneral() && !SecurityUtils.isAdminPagos()) {
@@ -389,6 +403,7 @@
                     emailBody);
         }
 
+        @Audit(action = "REUPLOAD_CONGRESS_PAYMENT", entity = "USER")
         @Override
         public void reuploadCongressPayment(MultipartFile paymentFile, MultipartFile studentFile) {
             String keycloakId = SecurityUtils.getKeycloakId();
@@ -426,6 +441,7 @@
                     "Hemos recibido tus nuevos comprobantes para el congreso. En breve un administrador los revisará.");
         }
 
+        @Audit(action = "REUPLOAD_COURSE_PAYMENT", entity = "COURSE")
         @Override
         public void reuploadCoursePayment(Long courseId, MultipartFile paymentFile) {
             String keycloakId = SecurityUtils.getKeycloakId();
@@ -469,6 +485,7 @@
                     .toList();
         }
 
+        @Override
         public List<CourseEnrollmentDTO> getUserCourses(Long userId) {
             User user = repository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
             return user.getEnrollments()

@@ -1,5 +1,6 @@
 package com.innovawebJT.lacsc.service.imp;
 
+import com.innovawebJT.lacsc.audit.Audit;
 import com.innovawebJT.lacsc.dto.*;
 import com.innovawebJT.lacsc.enums.*;
 import com.innovawebJT.lacsc.model.Summary;
@@ -34,7 +35,7 @@ public class SummaryService implements ISummaryService {
     private final AuthService authService;
     private final MailSenderNotifications emailService;
 
-
+    @Audit(action = "CREATE_SUMMARY", entity = "SUMMARY")
     @Override
     public SummaryDTO create(Summary summary, MultipartFile paymentFile) {
 
@@ -60,6 +61,7 @@ public class SummaryService implements ISummaryService {
         return mapToSummaryDTO(savedSummary);
     }
 
+    @Audit(action = "REUPLOAD_SUMMARY_PAYMENT", entity = "SUMMARY")
     @Override
     public void reuploadPaymentProof(Long summaryId, MultipartFile file) {
 
@@ -128,6 +130,7 @@ public class SummaryService implements ISummaryService {
         return mapToSummaryDTO(summary);
     }
 
+    @Audit(action = "DOWNLOAD_SUMMARY_PAYMENT", entity = "SUMMARY")
     @Override
     public Resource getPaymentResource(Long id) {
         Summary summary = summaryRepository.findById(id).orElseThrow(() -> new RuntimeException("Resumen no encontrado"));
@@ -146,6 +149,7 @@ public class SummaryService implements ISummaryService {
         return fileStorageService.load(summary.getReferencePaymentFile());
     }
 
+    @Audit(action = "DELETE_SUMMARY", entity = "SUMMARY")
     @Override
     public void delete(Long id) {
         Summary summary = summaryRepository.findById(id).orElseThrow(() -> new RuntimeException("Resumen no encontrado"));
@@ -161,6 +165,7 @@ public class SummaryService implements ISummaryService {
         summaryRepository.delete(summary);
     }
 
+    @Audit(action = "UPDATE_SUMMARY_INFO", entity = "SUMMARY")
     @Override
     public SummaryDTO updateInfo(Long id, SummaryUpdateRequestDTO request) {
         Summary summary = summaryRepository.findById(id).orElseThrow(() -> new RuntimeException("Resumen no encontrado"));
@@ -227,6 +232,7 @@ public class SummaryService implements ISummaryService {
         throw new AccessDeniedException("No tiene permisos para realizar esta acción");
     }
 
+    @Audit(action = "ASSIGN_SCHEDULE", entity = "SUMMARY")
     @Override
     public SummaryDTO updateSchedule(Long id, SummaryScheduleDTO request) {
 
@@ -261,6 +267,7 @@ public class SummaryService implements ISummaryService {
         return mapToSummaryDTO(saved);
     }
 
+    @Audit(action = "UPDATE_MODALITY", entity = "SUMMARY")
     @Override
     public SummaryDTO updateModality(Long id, SummaryModalityDTO request) {
 
@@ -281,6 +288,7 @@ public class SummaryService implements ISummaryService {
         return mapToSummaryDTO(saved);
     }
 
+    @Audit(action = "REVIEW_SUMMARY", entity = "SUMMARY")
     @Override
     public SummaryDTO reviewSummary(Long id, SummaryReviewDTO review) {
         Summary summary = summaryRepository.findById(id).orElseThrow(() -> new RuntimeException("Resumen no encontrado"));
