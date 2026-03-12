@@ -13,6 +13,7 @@ public record UserResponseDTO(Long id,
                               Category category,
                               Institution institution,
                               Status status,
-							  SummaryCounterDTO summariesReviewed
+							  SummaryCounterDTO summariesReviewed,
+							  CourseCounterDTO courseReviewed
 							) {
 }

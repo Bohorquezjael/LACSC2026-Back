@@ -5,11 +5,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Data
+@Getter
+@Setter
+@RequiredArgsConstructor
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
 @Table
 public class Author {

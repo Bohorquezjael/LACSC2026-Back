@@ -1,9 +1,7 @@
     package com.innovawebJT.lacsc.service.imp;
 
-    import com.innovawebJT.lacsc.dto.CongressReviewDTO;
-    import com.innovawebJT.lacsc.dto.EmergencyContactDTO;
-    import com.innovawebJT.lacsc.dto.UserProfileDTO;
-    import com.innovawebJT.lacsc.dto.UserResponseDTO;
+    import com.innovawebJT.lacsc.audit.Audit;
+    import com.innovawebJT.lacsc.dto.*;
     import com.innovawebJT.lacsc.enums.FileCategory;
     import com.innovawebJT.lacsc.enums.Status;
     import com.innovawebJT.lacsc.exception.DuplicateUserFieldException;
@@ -15,10 +13,10 @@
     import com.innovawebJT.lacsc.repository.CourseEnrollmentRepository;
     import com.innovawebJT.lacsc.repository.CourseRepository;
     import com.innovawebJT.lacsc.repository.SummaryRepository;
-    import com.innovawebJT.lacsc.model.Summary;
     import com.innovawebJT.lacsc.repository.UserRepository;
     import com.innovawebJT.lacsc.security.SecurityUtils;
     import com.innovawebJT.lacsc.service.IUserService;
+    import com.innovawebJT.lacsc.util.Helpers;
     import lombok.AllArgsConstructor;
     import lombok.extern.slf4j.Slf4j;
     import org.springframework.core.io.Resource;
@@ -33,6 +31,13 @@
 
     import com.innovawebJT.lacsc.enums.SpecialSessions;
 
+    import static com.innovawebJT.lacsc.util.Helpers.mapToUserResponseDTO;
+    import static com.innovawebJT.lacsc.util.Helpers.mapToResponseDTO;
+
+    @Slf4j
+    @Service
+    @AllArgsConstructor
+    public class UserService implements IUserService {
 
     @Slf4j
     @Service
@@ -47,10 +52,7 @@
         private final SummaryService summaryService;
         private final SummaryRepository summaryRepository;
 
-        private boolean hasAdminRole() {
-            return SecurityUtils.isAdminGeneral() || SecurityUtils.isAdminSesion() || SecurityUtils.isAdminPagos() || SecurityUtils.isAdminRevision();
-        }
-
+        @Audit(action = "UPDATE_PROFILE", entity = "USER")
         @Override
         public UserResponseDTO createOrUpdateProfile(String keycloakId, UserProfileDTO dto) {
 
@@ -111,6 +113,8 @@
             }
         }
 
+        @Audit(action = "REVIEW_CONGRESS_REGISTRATION", entity = "USER")
+        @Override
         public void reviewUserRegistration(Long userId, CongressReviewDTO dto) {
             if (!SecurityUtils.isAdminGeneral() && !SecurityUtils.isAdminPagos()) {
                 throw new AccessDeniedException("No tienes permiso para realizar esta acción");
@@ -145,20 +149,49 @@
 
         @Override
         public Page<UserResponseDTO> getAll(Pageable pageable) {
-            if (SecurityUtils.isAdminGeneral() || SecurityUtils.isAdminPagos() || SecurityUtils.isAdminRevision()) {
-                return repository.findAll(pageable).map(this::mapToUserResponseDTO);
+
+            if (SecurityUtils.isAdminGeneral()
+                    || SecurityUtils.isAdminPagos()
+                    || SecurityUtils.isAdminRevision()) {
+
+                Page<User> users = repository.findAll(pageable);
+
+                return users.map(user -> {
+                    SummaryCounterDTO counter =
+                            summaryService.getCountOfSummariesByUserId(user.getId());
+                    CourseCounterDTO courseCounter =
+                            getCountOfCoursesByUserId(user.getId());
+
+
+                    return mapToUserResponseDTO(user, counter, courseCounter);
+                });
             }
 
             if (SecurityUtils.isAdminSesion()) {
-                List<SpecialSessions> sessions = SecurityUtils.getAllowedSessionsFromRoles();
+
+                List<SpecialSessions> sessions =
+                        SecurityUtils.getAllowedSessionsFromRoles();
+
                 if (!sessions.isEmpty()) {
-                    return repository.findUsersBySpecialSessions(sessions, pageable)
-                            .map(this::mapToUserResponseDTO);
+
+                    return repository
+                            .findUsersBySpecialSessions(sessions, pageable)
+                            .map(user -> {
+                                SummaryCounterDTO counter =
+                                        summaryService.getCountOfSummariesByUserId(user.getId());
+                                CourseCounterDTO courseCounter =
+                                        getCountOfCoursesByUserId(user.getId());
+
+
+                                return mapToUserResponseDTO(user, counter, courseCounter);
+                            });
                 }
             }
+
             return Page.empty(pageable);
         }
 
+        @Audit(action = "DELETE_USER", entity = "USER")
         @Override
         public boolean deleteUser(Long id) {
             if (repository.existsById(id)) {
@@ -180,7 +213,7 @@
     }
 
     @Override
-    public UserProfileDTO getById(Long id) {
+    public UserProfileDTO getById(Long id, Pageable pageable) {
         User u = repository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
 
         if (!SecurityUtils.isAdminGeneral() && !SecurityUtils.isAdminSesion() && !SecurityUtils.isAdminPagos() && !SecurityUtils.isAdminRevision()) {
@@ -188,7 +221,7 @@
         }
 
         if (SecurityUtils.isAdminSesion()) {
-            List<Summary> userSummariesInAllowedSessions = summaryRepository.findAllByPresenter_IdAndSpecialSessionIn(u.getId(), SecurityUtils.getAllowedSessionsFromRoles());
+            Page<SummaryDTO> userSummariesInAllowedSessions = summaryRepository.findAllByPresenter_IdAndSpecialSessionIn(u.getId(), SecurityUtils.getAllowedSessionsFromRoles(), pageable).map(Helpers::mapToSummaryDTO);
 
             if (userSummariesInAllowedSessions.isEmpty()) {
                 throw new AccessDeniedException("No tienes permiso para ver este usuario");
@@ -197,6 +230,8 @@
         return mapToResponseDTO(u);
     }
 
+        @Audit(action = "ENROLL_CONGRESS", entity = "USER")
+        @Override
         public void enrollToCongress(MultipartFile paymentFile, MultipartFile studentFile) {
             String keycloakId = SecurityUtils.getKeycloakId();
             User user = repository.findByKeycloakId(keycloakId)
@@ -229,6 +264,8 @@
                 "Hemos recibido tus comprobantes. En breve un administrador revisará tu pago.");
         }
 
+        @Audit(action = "DOWNLOAD_CONGRESS_FILE", entity = "USER")
+        @Override
         public Resource getCongressFile(Long userId, String type) {
             User user = repository.findById(userId)
                     .orElseThrow(() -> new UserNotFoundException("User not found"));
@@ -250,6 +287,7 @@
             return fileStorageService.load(path);
         }
 
+        @Audit(action = "DOWNLOAD_MY_CONGRESS_FILE", entity = "USER")
         @Override
         public Resource getMyCongressFile(String type) {
             String keycloakId = SecurityUtils.getKeycloakId();
@@ -265,6 +303,7 @@
             return fileStorageService.load(path);
         }
 
+        @Audit(action = "ENROLL_COURSE", entity = "COURSE")
         @Override
         public void enrollCurrentUserToCourse(Long courseId, MultipartFile paymentFile) {
             String keycloakId = SecurityUtils.getKeycloakId();
@@ -291,15 +330,16 @@
             enrollment.setReferencePaymentFile(paymentPath);
             enrollment.setPaymentStatus(Status.PENDING);
 
-            if (user.getCourses() == null) {
-                user.setCourses(new HashSet<>());
+            if (user.getEnrollments() == null) {
+                user.setEnrollments(new HashSet<>());
             }
-            user.getCourses().add(course);
+            user.getEnrollments().add(enrollment);
 
             courseEnrollmentRepository.save(enrollment);
             repository.save(user);
         }
 
+        @Audit(action = "DOWNLOAD_MY_COURSE_PAYMENT", entity = "COURSE")
         @Override
         public Resource getMyCoursePaymentFile(Long courseId) {
             String keycloakId = SecurityUtils.getKeycloakId();
@@ -317,6 +357,7 @@
             return fileStorageService.load(path);
         }
 
+        @Audit(action = "DOWNLOAD_COURSE_PAYMENT", entity = "COURSE")
         @Override
         public Resource getCoursePaymentFile(Long userId, Long courseId) {
             User targetUser = repository.findById(userId)
@@ -340,6 +381,7 @@
             return fileStorageService.load(path);
         }
 
+        @Audit(action = "REVIEW_COURSE_PAYMENT", entity = "COURSE")
         @Override
         public void reviewCoursePayment(Long userId, Long courseId, Status status, String message) {
             if (!SecurityUtils.isAdminGeneral() && !SecurityUtils.isAdminPagos()) {
@@ -365,6 +407,7 @@
                     emailBody);
         }
 
+        @Audit(action = "REUPLOAD_CONGRESS_PAYMENT", entity = "USER")
         @Override
         public void reuploadCongressPayment(MultipartFile paymentFile, MultipartFile studentFile) {
             String keycloakId = SecurityUtils.getKeycloakId();
@@ -402,6 +445,7 @@
                     "Hemos recibido tus nuevos comprobantes para el congreso. En breve un administrador los revisará.");
         }
 
+        @Audit(action = "REUPLOAD_COURSE_PAYMENT", entity = "COURSE")
         @Override
         public void reuploadCoursePayment(Long courseId, MultipartFile paymentFile) {
             String keycloakId = SecurityUtils.getKeycloakId();
@@ -433,52 +477,50 @@
         }
 
         @Override
-        public List<Course> getMyCourses() {
+        public List<CourseEnrollmentDTO> getMyCourses() {
             String keycloakId = SecurityUtils.getKeycloakId();
+
             User user = repository.findByKeycloakId(keycloakId)
                     .orElseThrow(() -> new UserNotFoundException("User not found"));
-            return List.copyOf(user.getCourses());
+
+            return user.getEnrollments()
+                    .stream()
+                    .map(Helpers::mapToDTO)
+                    .toList();
         }
 
-        private UserProfileDTO mapToResponseDTO(User user) {
-            return UserProfileDTO.builder()
-                    .name(user.getName())
-                    .surname(user.getSurname())
-                    .cellphone(user.getCellphone())
-                    .gender(user.getGender())
-                    .country(user.getCountry())
-                    .badgeName(user.getBadgeName())
-                    .email(user.getEmail())
-                    .category(user.getCategory())
-                    .institution(user.getInstitution())
-                    .emergencyContact(mapToResponseContactDTO(user.getEmergencyContact()))
-                    .status(user.getStatus())
-                    .createdAt(user.getCreatedAt())
-                    .referencePaymentFile(user.getReferencePaymentFile())
-                    .referenceStudentFile(user.getReferenceStudentFile())
+        @Override
+        public List<CourseEnrollmentDTO> getUserCourses(Long userId) {
+            User user = repository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+            return user.getEnrollments()
+                    .stream()
+                    .map(Helpers::mapToDTO)
+                    .toList();
+        }
+
+        @Override
+        public CourseCounterDTO getCountOfCoursesByUserId(Long userId) {
+
+            long approved;
+            long total;
+
+            if (SecurityUtils.isAdminPagos() || SecurityUtils.isAdminGeneral() || SecurityUtils.isAdminRevision() || SecurityUtils.isAdminSesion()) {
+
+                approved = courseEnrollmentRepository
+                        .countAllByUser_IdAndPaymentStatus(userId, Status.APPROVED);
+
+                total = courseEnrollmentRepository
+                        .countAllByUser_Id(userId);
+
+            } else {
+
+                approved = 0;
+                total = 0;
+            }
+
+            return CourseCounterDTO.builder()
+                    .approvedCourses(approved)
+                    .totalCourses(total)
                     .build();
         }
-
-        private UserResponseDTO mapToUserResponseDTO(User user) {
-            return UserResponseDTO.builder()
-                    .id(user.getId())
-                    .name(user.getName())
-                    .surname(user.getSurname())
-                    .email(user.getEmail())
-                    .status(user.getStatus())
-                    .institution(user.getInstitution())
-                    .category(user.getCategory())
-                    .summariesReviewed(summaryService.getCountOfSummariesByUserId(user.getId()))
-                    .build();
-        }
-
-        private EmergencyContactDTO mapToResponseContactDTO(EmergencyContact contact) {
-            return EmergencyContactDTO.builder()
-                    .fullName(contact.getName())
-                    .relationship(contact.getRelationship())
-                    .phone(contact.getCellphone())
-                    .build();
-        }
-
-
     }

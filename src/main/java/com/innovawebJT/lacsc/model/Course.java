@@ -1,20 +1,17 @@
 package com.innovawebJT.lacsc.model;
 
-import com.innovawebJT.lacsc.enums.Status;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Data
+@Getter
+@Setter
+@RequiredArgsConstructor
 @Table(name = "courses")
 @AllArgsConstructor
-@NoArgsConstructor
 @Builder
 public class Course {
 
@@ -24,6 +21,7 @@ public class Course {
 
 	private String name;
 
-	@ManyToMany(mappedBy = "courses", fetch = FetchType.LAZY)
-	private Set<User> users = new HashSet<>();
+	@OneToMany(mappedBy = "course")
+	@JsonManagedReference("course-enrollments")
+	private Set<CourseEnrollment> enrollments;
 }

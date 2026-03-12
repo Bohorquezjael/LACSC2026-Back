@@ -1,28 +1,29 @@
 package com.innovawebJT.lacsc.service.imp;
 
-import com.innovawebJT.lacsc.dto.SummaryCounterDTO;
-import com.innovawebJT.lacsc.dto.SummaryReviewDTO;
-import com.innovawebJT.lacsc.dto.SummaryUpdateRequestDTO;
-import com.innovawebJT.lacsc.enums.FileCategory;
-import com.innovawebJT.lacsc.enums.SpecialSessions;
-import com.innovawebJT.lacsc.enums.ReviewType;
-import com.innovawebJT.lacsc.enums.Status;
+import com.innovawebJT.lacsc.audit.Audit;
+import com.innovawebJT.lacsc.dto.*;
+import com.innovawebJT.lacsc.enums.*;
 import com.innovawebJT.lacsc.model.Summary;
 import com.innovawebJT.lacsc.model.User;
 import com.innovawebJT.lacsc.repository.SummaryRepository;
 import com.innovawebJT.lacsc.service.ISummaryService;
+import com.innovawebJT.lacsc.util.Helpers;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Objects;
 
 import static com.innovawebJT.lacsc.security.SecurityUtils.*;
+import static com.innovawebJT.lacsc.util.Helpers.mapToSummaryDTO;
 
 @Slf4j
 @Service
@@ -34,9 +35,9 @@ public class SummaryService implements ISummaryService {
     private final AuthService authService;
     private final MailSenderNotifications emailService;
 
-
+    @Audit(action = "CREATE_SUMMARY", entity = "SUMMARY")
     @Override
-    public Summary create(Summary summary, MultipartFile paymentFile) {
+    public SummaryDTO create(Summary summary, MultipartFile paymentFile) {
 
         User currentUser = authService.getCurrentUser();
 
@@ -57,13 +58,14 @@ public class SummaryService implements ISummaryService {
         Summary savedSummary = summaryRepository.save(summary);
         emailService.sendEmail(savedSummary.getPresenter().getEmail(), "Registro de Resumen Exitoso",
             "Hemos recibido tu resumen: " + savedSummary.getTitle() + ". El pago está en revisión.");
-        return savedSummary;
+        return mapToSummaryDTO(savedSummary);
     }
 
+    @Audit(action = "REUPLOAD_SUMMARY_PAYMENT", entity = "SUMMARY")
     @Override
     public void reuploadPaymentProof(Long summaryId, MultipartFile file) {
 
-        Summary summary = getById(summaryId);
+        Summary summary = summaryRepository.findById(summaryId).orElseThrow(() -> new RuntimeException("Resumen no encontrado"));
         User currentUser = authService.getCurrentUser();
 
         if (!summary.getPresenter().getId().equals(currentUser.getId())) {
@@ -88,11 +90,11 @@ public class SummaryService implements ISummaryService {
     }
 
     @Override
-    public Page<Summary> getAll(Pageable pageable) {
+    public Page<SummaryDTO> getAll(Pageable pageable) {
 
         if (isAdminGeneral() || isAdminPagos() || isAdminRevision()) {
             log.info("Admin general");
-            return summaryRepository.findAll(pageable);
+            return summaryRepository.findAll(pageable).map(Helpers::mapToSummaryDTO);
         }
 
         if (isAdminSesion()) {
@@ -104,7 +106,7 @@ public class SummaryService implements ISummaryService {
             }
 
             return summaryRepository
-                    .findBySpecialSessionIn(allowedSessions, pageable);
+                    .findBySpecialSessionIn(allowedSessions, pageable).map(Helpers::mapToSummaryDTO);
         }
         log.error("No entra a rol");
         throw new AccessDeniedException("No autorizado");
@@ -112,13 +114,13 @@ public class SummaryService implements ISummaryService {
 
 
     @Override
-    public Page<Summary> getMine(Pageable pageable) {
-        User currentUser = authService.getCurrentUser();
-        return summaryRepository.findByPresenter(currentUser, pageable);
+    public Page<SummaryDTO> getMine(Pageable pageable) {
+        Long userId = authService.getCurrentUser().getId();
+        return summaryRepository.getAllByPresenter_Id(userId, pageable).map(Helpers::mapToSummaryDTO);
     }
 
     @Override
-    public Summary getById(Long id) {
+    public SummaryDTO getById(Long id) {
         Summary summary = summaryRepository.findById(id).orElseThrow(() -> new RuntimeException("Resumen no encontrado"));
         if(!isAdminGeneral() && !isAdminRevision() && !isAdminPagos() && !summary.getPresenter().getId().equals(authService.getCurrentUser().getId())) {
             throw new AccessDeniedException("No tienes permiso para ver este resumen");
@@ -126,12 +128,13 @@ public class SummaryService implements ISummaryService {
         if(isAdminSesion() && !getAllowedSessionsFromRoles().contains(summary.getSpecialSession())) {
             throw new AccessDeniedException("No estas autorizado para ver resumenes de otras sesiones.");
         }
-        return summary;
+        return mapToSummaryDTO(summary);
     }
 
+    @Audit(action = "DOWNLOAD_SUMMARY_PAYMENT", entity = "SUMMARY")
     @Override
     public Resource getPaymentResource(Long id) {
-        Summary summary = getById(id);
+        Summary summary = summaryRepository.findById(id).orElseThrow(() -> new RuntimeException("Resumen no encontrado"));
         boolean isAdmin = isAdminGeneral() || isAdminPagos() || isAdminRevision();
         User currentUser = isAdmin ? null : authService.getCurrentUser();
 
@@ -147,9 +150,10 @@ public class SummaryService implements ISummaryService {
         return fileStorageService.load(summary.getReferencePaymentFile());
     }
 
+    @Audit(action = "DELETE_SUMMARY", entity = "SUMMARY")
     @Override
     public void delete(Long id) {
-        Summary summary = getById(id);
+        Summary summary = summaryRepository.findById(id).orElseThrow(() -> new RuntimeException("Resumen no encontrado"));
         boolean isAdmin = hasAdminRole();
         User currentUser = isAdmin ? null : authService.getCurrentUser();
 
@@ -162,9 +166,10 @@ public class SummaryService implements ISummaryService {
         summaryRepository.delete(summary);
     }
 
+    @Audit(action = "UPDATE_SUMMARY_INFO", entity = "SUMMARY")
     @Override
-    public Summary updateInfo(Long id, SummaryUpdateRequestDTO request) {
-        Summary summary = getById(id);
+    public SummaryDTO updateInfo(Long id, SummaryUpdateRequestDTO request) {
+        Summary summary = summaryRepository.findById(id).orElseThrow(() -> new RuntimeException("Resumen no encontrado"));
         String userEmail = summary.getPresenter().getEmail();
         String title = summary.getTitle();
         String message;
@@ -176,6 +181,9 @@ public class SummaryService implements ISummaryService {
             summary.setPresentationRoom(request.presentationRoom());
             savedSummary = summaryRepository.save(summary);
 
+
+
+            //modalidad por aparte y los demas campos juntos
             message = """
                     Hola, tu resumen "%s" ha sido programado/actualizado.
                     Modalidad: %s
@@ -196,7 +204,7 @@ public class SummaryService implements ISummaryService {
                     message
             );
 
-            return savedSummary;
+            return mapToSummaryDTO(savedSummary);
         }
 
         if (isAdminSesion()) {
@@ -204,7 +212,7 @@ public class SummaryService implements ISummaryService {
             if (request.presentationDateTime() != null && !request.presentationDateTime().equals(summary.getPresentationDateTime())) {
                 throw new AccessDeniedException("No tiene permisos para modificar la fecha/hora de la presentación");
             }
-            if (request.presentationRoom() != 0 && request.presentationRoom() != summary.getPresentationRoom()) {
+            if (!Objects.equals(request.presentationRoom(), "") && !Objects.equals(request.presentationRoom(), summary.getPresentationRoom())) {
                 throw new AccessDeniedException("No tiene permisos para modificar la sala de la presentación");
             }
             if (request.authors() != null && !request.authors().isEmpty()) {
@@ -219,15 +227,72 @@ public class SummaryService implements ISummaryService {
                     "Actualización de modalidad/agenda - LACSC 2026",
                     message
             );
-            return savedSummary;
+            return mapToSummaryDTO(savedSummary);
         }
 
         throw new AccessDeniedException("No tiene permisos para realizar esta acción");
     }
 
+    @Audit(action = "ASSIGN_SCHEDULE", entity = "SUMMARY")
     @Override
-    public Summary reviewSummary(Long id, SummaryReviewDTO review) {
-        Summary summary = getById(id);
+    public SummaryDTO updateSchedule(Long id, SummaryScheduleDTO request) {
+
+        Summary summary = summaryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Resumen no encontrado"));
+
+        if (summary.getPresentationModality() == PresentationModality.ORAL) {
+
+            boolean exists = summaryRepository
+                    .existsByPresentationDateTimeAndPresentationRoomAndPresentationModalityAndIdNot(
+                            request.presentationDateTime(),
+                            request.presentationRoom(),
+                            PresentationModality.ORAL,
+                            id
+                    );
+
+            if (exists) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "La sala ya está ocupada en ese horario"
+                );
+            }
+        }
+
+        summary.setPresentationDateTime(request.presentationDateTime());
+        summary.setPresentationRoom(request.presentationRoom());
+
+        Summary saved = summaryRepository.save(summary);
+
+        sendScheduleEmail(summary);
+
+        return mapToSummaryDTO(saved);
+    }
+
+    @Audit(action = "UPDATE_MODALITY", entity = "SUMMARY")
+    @Override
+    public SummaryDTO updateModality(Long id, SummaryModalityDTO request) {
+
+        Summary summary = summaryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Resumen no encontrado"));
+
+        summary.setPresentationModality(request.presentationModality());
+
+        if (request.presentationModality() == PresentationModality.POSTER) {
+            summary.setPresentationDateTime(null);
+            summary.setPresentationRoom(null);
+        }
+
+        Summary saved = summaryRepository.save(summary);
+
+        sendModalityEmail(summary);
+
+        return mapToSummaryDTO(saved);
+    }
+
+    @Audit(action = "REVIEW_SUMMARY", entity = "SUMMARY")
+    @Override
+    public SummaryDTO reviewSummary(Long id, SummaryReviewDTO review) {
+        Summary summary = summaryRepository.findById(id).orElseThrow(() -> new RuntimeException("Resumen no encontrado"));
         log.info("[DEBUG_LOG] Reviewing summary id: {}. Review status: {}. Review Type: {}. Is Admin General: {}. Is Admin Session: {}. Is Admin Pagos: {}", 
                 id, review.status(), review.type(), isAdminGeneral(), isAdminSesion(), isAdminPagos());
 
@@ -239,7 +304,7 @@ public class SummaryService implements ISummaryService {
             if (!isAdminGeneral() && !isAdminPagos()) {
                 throw new AccessDeniedException("No tienes permiso para revisar pagos");
             }
-            return updateSummary(summary, review, review.type());
+            return mapToSummaryDTO(updateSummary(summary, review, review.type()));
         }
 
         if (review.type() == ReviewType.ACADEMIC) {
@@ -252,24 +317,24 @@ public class SummaryService implements ISummaryService {
                     throw new AccessDeniedException("No autorizado para revisar esta sesión");
                 }
             }
-            return updateSummary(summary, review, review.type());
+            return mapToSummaryDTO(updateSummary(summary, review, review.type()));
         }
 
         throw new AccessDeniedException("No autorizado");
     }
 
     @Override
-    public List<Summary> getAllByUserId(Long userId) {
+    public Page<SummaryDTO> getAllByUserId(Long userId, Pageable pageable) {
         if (isAdminGeneral() || isAdminPagos() || isAdminRevision() || authService.getCurrentUser().getId().equals(userId)) {
-            return summaryRepository.getAllByPresenter_Id(userId).orElseGet(List::of);
+            return summaryRepository.getAllByPresenter_Id(userId, pageable).map(Helpers::mapToSummaryDTO);
         }
 
         if (isAdminSesion()) {
             List<SpecialSessions> allowedSessions = getAllowedSessionsFromRoles();
             if (allowedSessions.isEmpty()) {
-                return List.of();
+                return Page.empty();
             }
-            return summaryRepository.findAllByPresenter_IdAndSpecialSessionIn(userId, allowedSessions);
+            return summaryRepository.findAllByPresenter_IdAndSpecialSessionIn(userId, allowedSessions, pageable).map(Helpers::mapToSummaryDTO);
         }
 
         throw new AccessDeniedException("No tienes permiso para ver estos resúmenes");
@@ -280,44 +345,55 @@ public class SummaryService implements ISummaryService {
     }
 
     public SummaryCounterDTO getCountOfSummariesByUserId(Long userId) {
+
         int approved;
         int total;
 
-        log.info("[DEBUG_LOG] Calculating summary count for userId: {}", userId);
-
-        summaryRepository.getAllByPresenter_Id(userId).ifPresent(summaries -> summaries.forEach(s -> log.info("[DEBUG_LOG] Summary ID: {}, Status: {}, Payment: {}, Session: {}",
-            s.getId(), s.getSummaryStatus(), s.getSummaryPayment(), s.getSpecialSession())));
-
         if (isAdminPagos()) {
-            log.info("[DEBUG_LOG] Admin pagos detected. Counting by SummaryPayment.");
-            approved = summaryRepository.countAllByPresenter_IdAndSummaryPayment(userId, Status.APPROVED);
-            total = summaryRepository.countAllByPresenter_Id(userId);
+            approved = summaryRepository
+                    .countAllByPresenter_IdAndSummaryPayment(userId, Status.APPROVED);
+            total = summaryRepository
+                    .countAllByPresenter_Id(userId);
+
         } else if (isAdminRevision()) {
-            log.info("[DEBUG_LOG] Admin revisión detected. Counting by SummaryStatus.");
-            approved = summaryRepository.countAllByPresenter_IdAndSummaryStatus(userId, Status.APPROVED);
-            total = summaryRepository.countAllByPresenter_Id(userId);
+            approved = summaryRepository
+                    .countAllByPresenter_IdAndSummaryStatus(userId, Status.APPROVED);
+            total = summaryRepository
+                    .countAllByPresenter_Id(userId);
+
         } else if (isAdminSesion()) {
+
             List<SpecialSessions> allowedSessions = getAllowedSessionsFromRoles();
-            log.info("[DEBUG_LOG] Admin session roles detected. Allowed sessions: {}", allowedSessions);
+
             if (allowedSessions.isEmpty()) {
                 approved = 0;
                 total = 0;
             } else {
-                approved = summaryRepository.countAllByPresenter_IdAndSummaryStatusAndSpecialSessionIn(userId, Status.APPROVED, allowedSessions);
-                total = summaryRepository.countAllByPresenter_IdAndSpecialSessionIn(userId, allowedSessions);
-                log.info("[DEBUG_LOG] Session count result - Approved: {}, Total: {}", approved, total);
-            }
-        } else if (isAdminGeneral()) {
-            log.info("[DEBUG_LOG] Admin general detected. Counting by SummaryPayment.");
-            approved = summaryRepository.countAllByPresenter_IdAndSummaryPayment(userId, Status.APPROVED);
-            total = summaryRepository.countAllByPresenter_Id(userId);
-        } else {
-            log.info("[DEBUG_LOG] Owner or other detected. Counting by SummaryStatus.");
-            approved = summaryRepository.countAllByPresenter_IdAndSummaryStatus(userId, Status.APPROVED);
-            total = summaryRepository.countAllByPresenter_Id(userId);
-        }
+                approved = summaryRepository
+                        .countAllByPresenter_IdAndSummaryStatusAndSpecialSessionIn(
+                                userId, Status.APPROVED, allowedSessions);
 
-        log.info("[DEBUG_LOG] Count result - Approved: {}, Total: {}", approved, total);
+                total = summaryRepository
+                        .countAllByPresenter_IdAndSpecialSessionIn(
+                                userId, allowedSessions);
+            }
+
+        } else if (isAdminGeneral()) {
+
+            approved = summaryRepository
+                    .countAllByPresenter_IdAndSummaryPayment(userId, Status.APPROVED);
+
+            total = summaryRepository
+                    .countAllByPresenter_Id(userId);
+
+        } else {
+
+            approved = summaryRepository
+                    .countAllByPresenter_IdAndSummaryStatus(userId, Status.APPROVED);
+
+            total = summaryRepository
+                    .countAllByPresenter_Id(userId);
+        }
 
         return SummaryCounterDTO.builder()
                 .approvedSummaries(approved)
@@ -394,4 +470,41 @@ public class SummaryService implements ISummaryService {
         emailService.sendEmail(userEmail, subject, message);
     }
 
+    private void sendScheduleEmail(Summary summary) {
+
+        String message = """
+            Hola, tu resumen "%s" ha sido reprogramado.
+            Fecha: %s
+            Hora: %s
+            Sala: %s
+            """.formatted(
+                summary.getTitle(),
+                summary.getPresentationDateTime().toLocalDate(),
+                summary.getPresentationDateTime().toLocalTime(),
+                summary.getPresentationRoom()
+        );
+
+        emailService.sendEmail(
+                summary.getPresenter().getEmail(),
+                "Actualización de agenda - LACSC 2026",
+                message
+        );
+    }
+
+    private void sendModalityEmail(Summary summary) {
+
+        String message = """
+            Hola, tu resumen "%s" ha cambiado de modalidad.
+            Nueva modalidad: %s
+            """.formatted(
+                summary.getTitle(),
+                summary.getPresentationModality()
+        );
+
+        emailService.sendEmail(
+                summary.getPresenter().getEmail(),
+                "Actualización de modalidad - LACSC 2026",
+                message
+        );
+    }
 }

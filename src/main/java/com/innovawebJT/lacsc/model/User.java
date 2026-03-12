@@ -1,23 +1,21 @@
 package com.innovawebJT.lacsc.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.innovawebJT.lacsc.enums.Category;
 import com.innovawebJT.lacsc.enums.Status;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.Set;
 
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
-@Data
-@NoArgsConstructor
+@Getter
+@Setter
+@RequiredArgsConstructor
 @AllArgsConstructor
 @Builder
 @Table(
@@ -65,14 +63,9 @@ public class User {
 
 	private String referenceStudentFile;
 
-	@ManyToMany(fetch = FetchType.LAZY)
-	@JoinTable(
-			name = "user_courses",
-			joinColumns = @JoinColumn(name = "user_id"),
-			inverseJoinColumns = @JoinColumn(name = "course_id")
-	)
-	@Builder.Default
-	private Set<Course> courses = new HashSet<>();
+	@OneToMany(mappedBy = "user")
+	@JsonManagedReference("user-enrollments")
+	private Set<CourseEnrollment> enrollments;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)

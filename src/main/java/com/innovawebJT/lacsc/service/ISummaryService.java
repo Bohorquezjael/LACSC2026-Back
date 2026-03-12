@@ -1,35 +1,35 @@
 package com.innovawebJT.lacsc.service;
 
-import com.innovawebJT.lacsc.dto.SummaryReviewDTO;
-import com.innovawebJT.lacsc.dto.SummaryUpdateRequestDTO;
-import com.innovawebJT.lacsc.enums.SpecialSessions;
+import com.innovawebJT.lacsc.dto.*;
 import com.innovawebJT.lacsc.model.Summary;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-
 public interface ISummaryService {
 
-    Summary create(Summary summary, MultipartFile paymentFile);
+    SummaryDTO create(Summary summary, MultipartFile paymentFile);
 
     void reuploadPaymentProof(Long summaryId, MultipartFile file);
 
-    Page<Summary> getAll(Pageable pageable);
+    Page<SummaryDTO> getAll(Pageable pageable);
 
-    Page<Summary> getMine(Pageable pageable);
+    Page<SummaryDTO> getMine(Pageable pageable);
 
-    Summary getById(Long id);
+    SummaryDTO getById(Long id);
 
     Resource getPaymentResource(Long summaryId);
 
     void delete(Long id);
 
-    Summary updateInfo(Long id, SummaryUpdateRequestDTO request);
+    SummaryDTO updateInfo(Long id, SummaryUpdateRequestDTO request);
 
-    Summary reviewSummary(Long id, SummaryReviewDTO review);
+    SummaryDTO updateModality(Long id, SummaryModalityDTO request);
 
-    List<Summary> getAllByUserId(Long id);
+    SummaryDTO updateSchedule(Long id, SummaryScheduleDTO request);
+
+    SummaryDTO reviewSummary(Long id, SummaryReviewDTO review);
+
+    Page<SummaryDTO> getAllByUserId(Long id, Pageable pageable);
 }
