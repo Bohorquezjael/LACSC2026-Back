@@ -1,6 +1,5 @@
 package com.innovawebJT.lacsc.dto;
 
-import com.innovawebJT.lacsc.dto.UserProfileDTO;
 import com.innovawebJT.lacsc.enums.PresentationModality;
 import com.innovawebJT.lacsc.enums.SpecialSessions;
 import com.innovawebJT.lacsc.enums.Status;
