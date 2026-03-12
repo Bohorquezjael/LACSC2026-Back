@@ -148,13 +148,13 @@ import java.util.stream.Collectors;
             if (SecurityUtils.isAdminGeneral() || SecurityUtils.isAdminPagos() || SecurityUtils.isAdminRevision()) {
                 Page<User> usersPage = repository.findAll(pageable);
                 List<Long> userIds = usersPage.getContent().stream().map(User::getId).toList();
-                
+
                 Map<Long, int[]> summaryCounts = repository.getSummaryCountsByUserIds(userIds, Status.APPROVED).stream()
-                    .collect(Collectors.toMap(
-                        row -> (Long) row[0],
-                        row -> new int[] {(int) row[1], (int) row[2]}
-                    ));
-                
+                        .collect(Collectors.toMap(
+                                row -> (Long) row[0],
+                                row -> new int[] {((Number) row[1]).intValue(), ((Number) row[2]).intValue()}
+                        ));
+
                 return usersPage.map(user -> {
                     int[] counts = summaryCounts.getOrDefault(user.getId(), new int[]{0, 0});
                     return mapToUserResponseDTO(user, counts[0], counts[1]);
@@ -169,13 +169,13 @@ import java.util.stream.Collectors;
                 if (!sessions.isEmpty()) {
                     Page<User> usersPage = repository.findUsersBySpecialSessions(sessions, pageable);
                     List<Long> userIds = usersPage.getContent().stream().map(User::getId).toList();
-                    
+
                     Map<Long, int[]> summaryCounts = repository.getSummaryCountsByUserIds(userIds, Status.APPROVED).stream()
-                        .collect(Collectors.toMap(
-                            row -> (Long) row[0],
-                            row -> new int[] {(int) row[1], (int) row[2]}
-                        ));
-                    
+                            .collect(Collectors.toMap(
+                                    row -> (Long) row[0],
+                                    row -> new int[] {((Number) row[1]).intValue(), ((Number) row[2]).intValue()}
+                            ));
+
                     return usersPage.map(user -> {
                         int[] counts = summaryCounts.getOrDefault(user.getId(), new int[]{0, 0});
                         return mapToUserResponseDTO(user, counts[0], counts[1]);
