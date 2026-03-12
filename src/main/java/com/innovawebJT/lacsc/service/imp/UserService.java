@@ -1,7 +1,10 @@
     package com.innovawebJT.lacsc.service.imp;
 
-    import com.innovawebJT.lacsc.audit.Audit;
-    import com.innovawebJT.lacsc.dto.*;
+    import com.innovawebJT.lacsc.dto.CongressReviewDTO;
+    import com.innovawebJT.lacsc.dto.EmergencyContactDTO;
+    import com.innovawebJT.lacsc.dto.UserProfileDTO;
+    import com.innovawebJT.lacsc.dto.SummaryCounterDTO;
+    import com.innovawebJT.lacsc.dto.UserResponseDTO;
     import com.innovawebJT.lacsc.enums.FileCategory;
     import com.innovawebJT.lacsc.enums.Status;
     import com.innovawebJT.lacsc.exception.DuplicateUserFieldException;
@@ -26,8 +29,10 @@
     import org.springframework.stereotype.Service;
     import org.springframework.web.multipart.MultipartFile;
 
-    import java.util.HashSet;
-    import java.util.List;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
     import com.innovawebJT.lacsc.enums.SpecialSessions;
 
@@ -149,21 +154,19 @@
 
         @Override
         public Page<UserResponseDTO> getAll(Pageable pageable) {
-
-            if (SecurityUtils.isAdminGeneral()
-                    || SecurityUtils.isAdminPagos()
-                    || SecurityUtils.isAdminRevision()) {
-
-                Page<User> users = repository.findAll(pageable);
-
-                return users.map(user -> {
-                    SummaryCounterDTO counter =
-                            summaryService.getCountOfSummariesByUserId(user.getId());
-                    CourseCounterDTO courseCounter =
-                            getCountOfCoursesByUserId(user.getId());
-
-
-                    return mapToUserResponseDTO(user, counter, courseCounter);
+            if (SecurityUtils.isAdminGeneral() || SecurityUtils.isAdminPagos() || SecurityUtils.isAdminRevision()) {
+                Page<User> usersPage = repository.findAll(pageable);
+                List<Long> userIds = usersPage.getContent().stream().map(User::getId).toList();
+                
+                Map<Long, int[]> summaryCounts = repository.getSummaryCountsByUserIds(userIds, Status.APPROVED).stream()
+                    .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> new int[] {(int) row[1], (int) row[2]}
+                    ));
+                
+                return usersPage.map(user -> {
+                    int[] counts = summaryCounts.getOrDefault(user.getId(), new int[]{0, 0});
+                    return mapToUserResponseDTO(user, counts[0], counts[1]);
                 });
             }
 
@@ -173,18 +176,19 @@
                         SecurityUtils.getAllowedSessionsFromRoles();
 
                 if (!sessions.isEmpty()) {
-
-                    return repository
-                            .findUsersBySpecialSessions(sessions, pageable)
-                            .map(user -> {
-                                SummaryCounterDTO counter =
-                                        summaryService.getCountOfSummariesByUserId(user.getId());
-                                CourseCounterDTO courseCounter =
-                                        getCountOfCoursesByUserId(user.getId());
-
-
-                                return mapToUserResponseDTO(user, counter, courseCounter);
-                            });
+                    Page<User> usersPage = repository.findUsersBySpecialSessions(sessions, pageable);
+                    List<Long> userIds = usersPage.getContent().stream().map(User::getId).toList();
+                    
+                    Map<Long, int[]> summaryCounts = repository.getSummaryCountsByUserIds(userIds, Status.APPROVED).stream()
+                        .collect(Collectors.toMap(
+                            row -> (Long) row[0],
+                            row -> new int[] {(int) row[1], (int) row[2]}
+                        ));
+                    
+                    return usersPage.map(user -> {
+                        int[] counts = summaryCounts.getOrDefault(user.getId(), new int[]{0, 0});
+                        return mapToUserResponseDTO(user, counts[0], counts[1]);
+                    });
                 }
             }
 
@@ -523,4 +527,43 @@
                     .totalCourses(total)
                     .build();
         }
+
+        private UserResponseDTO mapToUserResponseDTO(User user) {
+            return UserResponseDTO.builder()
+                    .id(user.getId())
+                    .name(user.getName())
+                    .surname(user.getSurname())
+                    .email(user.getEmail())
+                    .status(user.getStatus())
+                    .institution(user.getInstitution())
+                    .category(user.getCategory())
+                    .summariesReviewed(summaryService.getCountOfSummariesByUserId(user.getId()))
+                    .build();
+        }
+
+        private UserResponseDTO mapToUserResponseDTO(User user, int approvedCount, int totalCount) {
+            return UserResponseDTO.builder()
+                    .id(user.getId())
+                    .name(user.getName())
+                    .surname(user.getSurname())
+                    .email(user.getEmail())
+                    .status(user.getStatus())
+                    .institution(user.getInstitution())
+                    .category(user.getCategory())
+                    .summariesReviewed(SummaryCounterDTO.builder()
+                            .approved(approvedCount)
+                            .total(totalCount)
+                            .build())
+                    .build();
+        }
+
+        private EmergencyContactDTO mapToResponseContactDTO(EmergencyContact contact) {
+            return EmergencyContactDTO.builder()
+                    .fullName(contact.getName())
+                    .relationship(contact.getRelationship())
+                    .phone(contact.getCellphone())
+                    .build();
+        }
+
     }
+
