@@ -33,8 +33,8 @@ import java.util.stream.Collectors;
 
     import com.innovawebJT.lacsc.enums.SpecialSessions;
 
-    import static com.innovawebJT.lacsc.util.Helpers.mapToUserResponseDTO;
     import static com.innovawebJT.lacsc.util.Helpers.mapToResponseDTO;
+    import static com.innovawebJT.lacsc.util.Helpers.mapToUserResponseDTO;
 
     @Slf4j
     @Service
@@ -93,7 +93,11 @@ import java.util.stream.Collectors;
                 .surname(saved.getSurname())
                 .email(saved.getEmail())
                 .status(saved.getStatus())
-                .institution(saved.getInstitution())
+                .institution(InstitutionDTO.builder()
+                        .institutionName(saved.getInstitution().getInstitutionName())
+                        .institutionAcronym(saved.getInstitution().getInstitutionAcronym())
+                        .institutionCountry(saved.getInstitution().getInstitutionCountry())
+                        .build())
                 .category(saved.getCategory())
                 .build();
     }
@@ -157,7 +161,7 @@ import java.util.stream.Collectors;
 
                 return usersPage.map(user -> {
                     int[] counts = summaryCounts.getOrDefault(user.getId(), new int[]{0, 0});
-                    return mapToUserResponseDTO(user, counts[0], counts[1]);
+                    return mapToUserResponseDTO(user, new SummaryCounterDTO(counts[0], counts[1]), getCountOfCoursesByUserId(user.getId()));
                 });
             }
 
@@ -178,7 +182,7 @@ import java.util.stream.Collectors;
 
                     return usersPage.map(user -> {
                         int[] counts = summaryCounts.getOrDefault(user.getId(), new int[]{0, 0});
-                        return mapToUserResponseDTO(user, counts[0], counts[1]);
+                        return mapToUserResponseDTO(user, new SummaryCounterDTO(counts[0], counts[1]), getCountOfCoursesByUserId(user.getId()));
                     });
                 }
             }
@@ -518,43 +522,4 @@ import java.util.stream.Collectors;
                     .totalCourses(total)
                     .build();
         }
-
-        private UserResponseDTO mapToUserResponseDTO(User user) {
-            return UserResponseDTO.builder()
-                    .id(user.getId())
-                    .name(user.getName())
-                    .surname(user.getSurname())
-                    .email(user.getEmail())
-                    .status(user.getStatus())
-                    .institution(user.getInstitution())
-                    .category(user.getCategory())
-                    .summariesReviewed(summaryService.getCountOfSummariesByUserId(user.getId()))
-                    .build();
-        }
-
-        private UserResponseDTO mapToUserResponseDTO(User user, int approvedCount, int totalCount) {
-            return UserResponseDTO.builder()
-                    .id(user.getId())
-                    .name(user.getName())
-                    .surname(user.getSurname())
-                    .email(user.getEmail())
-                    .status(user.getStatus())
-                    .institution(user.getInstitution())
-                    .category(user.getCategory())
-                    .summariesReviewed(SummaryCounterDTO.builder()
-                            .approvedSummaries(approvedCount)
-                            .totalSummaries(totalCount)
-                            .build())
-                    .build();
-        }
-
-        private EmergencyContactDTO mapToResponseContactDTO(EmergencyContact contact) {
-            return EmergencyContactDTO.builder()
-                    .fullName(contact.getName())
-                    .relationship(contact.getRelationship())
-                    .phone(contact.getCellphone())
-                    .build();
-        }
-
     }
-

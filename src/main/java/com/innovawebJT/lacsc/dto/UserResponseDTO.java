@@ -11,7 +11,7 @@ public record UserResponseDTO(Long id,
                               String surname,
                               String email,
                               Category category,
-                              Institution institution,
+                              InstitutionDTO institution,
                               Status status,
 							  SummaryCounterDTO summariesReviewed,
 							  CourseCounterDTO courseReviewed
