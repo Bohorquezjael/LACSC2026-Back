@@ -31,16 +31,16 @@ class UserRepositoryGetSummaryCountsTest {
     @DisplayName("Should return correct summary counts for multiple users")
     void getSummaryCountsByUserIds_ReturnsCorrectCounts() {
         Institution institution = Institution.builder()
-                .name("Test University")
-                .acronym("TU")
-                .country("Mexico")
+                .institutionName("Test University")
+                .institutionAcronym("TU")
+                .institutionCountry("Mexico")
                 .build();
 
         User user1 = User.builder()
                 .name("User 1")
                 .surname("Test")
                 .email("user1@test.com")
-                .category(Category.STUDENT)
+                .category(Category.STUDENT_POSTGRADUATE)
                 .institution(institution)
                 .status(Status.APPROVED)
                 .keycloakId("keycloak-1")
@@ -90,16 +90,16 @@ class UserRepositoryGetSummaryCountsTest {
     @DisplayName("Should return counts as zero when user has no summaries")
     void getSummaryCountsByUserIds_UserWithNoSummaries_ReturnsZeroCounts() {
         Institution institution = Institution.builder()
-                .name("Test University")
-                .acronym("TU")
-                .country("Mexico")
+                .institutionName("Test University")
+                .institutionAcronym("TU")
+                .institutionCountry("Mexico")
                 .build();
 
         User user = User.builder()
                 .name("User No Summaries")
                 .surname("Test")
                 .email("nosummaries@test.com")
-                .category(Category.STUDENT)
+                .category(Category.STUDENT_UNDERGRADUATE)
                 .institution(institution)
                 .status(Status.APPROVED)
                 .keycloakId("keycloak-ns")

@@ -8,6 +8,7 @@ import lombok.*;
 @RequiredArgsConstructor
 @AllArgsConstructor
 @Embeddable
+@Builder
 public class Institution {
 
 	private String institutionName;

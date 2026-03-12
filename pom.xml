@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.innovawebJT</groupId>
 	<artifactId>lacsc</artifactId>
-	<version>0.1.0-SNAPSHOT</version>
+	<version>0.1.1-SNAPSHOT</version>
 	<name>lacsc</name>
 	<description>api for lacsc webpage </description>
 	<url/>

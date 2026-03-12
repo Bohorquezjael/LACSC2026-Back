@@ -71,9 +71,9 @@ class UserServiceGetAllTest {
         pageable = PageRequest.of(0, 12);
 
         Institution institution1 = Institution.builder()
-                .name("Test University")
-                .acronym("TU")
-                .country("Mexico")
+                .institutionName("Test University")
+                .institutionAcronym("TU")
+                .institutionCountry("Mexico")
                 .build();
 
         testUser1 = User.builder()
@@ -81,16 +81,16 @@ class UserServiceGetAllTest {
                 .name("John")
                 .surname("Doe")
                 .email("john.doe@test.com")
-                .category(Category.STUDENT)
+                .category(Category.STUDENT_UNDERGRADUATE)
                 .institution(institution1)
                 .status(Status.APPROVED)
                 .keycloakId("keycloak-1")
                 .build();
 
         Institution institution2 = Institution.builder()
-                .name("Another University")
-                .acronym("AU")
-                .country("USA")
+                .institutionName("Another University")
+                .institutionAcronym("AU")
+                .institutionCountry("USA")
                 .build();
 
         testUser2 = User.builder()
@@ -129,11 +129,11 @@ class UserServiceGetAllTest {
             assertThat(result).isNotNull();
             assertThat(result.getContent()).hasSize(2);
             assertThat(result.getContent().get(0).name()).isEqualTo("John");
-            assertThat(result.getContent().get(0).summariesReviewed().approved()).isEqualTo(5);
-            assertThat(result.getContent().get(0).summariesReviewed().total()).isEqualTo(10);
+            assertThat(result.getContent().get(0).summariesReviewed().approvedSummaries()).isEqualTo(5);
+            assertThat(result.getContent().get(0).summariesReviewed().totalSummaries()).isEqualTo(10);
             assertThat(result.getContent().get(1).name()).isEqualTo("Jane");
-            assertThat(result.getContent().get(1).summariesReviewed().approved()).isEqualTo(3);
-            assertThat(result.getContent().get(1).summariesReviewed().total()).isEqualTo(7);
+            assertThat(result.getContent().get(1).summariesReviewed().approvedSummaries()).isEqualTo(3);
+            assertThat(result.getContent().get(1).summariesReviewed().totalSummaries()).isEqualTo(7);
 
             verify(repository, times(1)).findAll(pageable);
             verify(repository, times(1)).getSummaryCountsByUserIds(anyList(), eq(Status.APPROVED));
@@ -167,8 +167,8 @@ class UserServiceGetAllTest {
 
             Page<UserResponseDTO> result = userService.getAll(pageable);
 
-            assertThat(result.getContent().get(0).summariesReviewed().approved()).isEqualTo(0);
-            assertThat(result.getContent().get(0).summariesReviewed().total()).isEqualTo(0);
+            assertThat(result.getContent().get(0).summariesReviewed().approvedSummaries()).isEqualTo(0);
+            assertThat(result.getContent().get(0).summariesReviewed().totalSummaries()).isEqualTo(0);
         }
     }
 
@@ -179,12 +179,12 @@ class UserServiceGetAllTest {
         @Test
         @DisplayName("Should return users filtered by special sessions")
         void getAll_AsAdminSesion_ReturnsFilteredUsers() {
-            List<SpecialSessions> allowedSessions = List.of(SpecialSessions.WORKSHOP);
+            List<SpecialSessions> allowedSessions = List.of(SpecialSessions.S_03);
             List<User> users = List.of(testUser1);
             Page<User> userPage = new PageImpl<>(users, pageable, 1);
 
-            List<Object[]> summaryCounts = List.of(
-                    new Object[]{1L, 2, 4}
+            List<Object[]> summaryCounts = List.<Object[]>of(
+                    new Object[]{1L, 2L, 4L}
             );
 
             when(repository.findUsersBySpecialSessions(allowedSessions, pageable))
