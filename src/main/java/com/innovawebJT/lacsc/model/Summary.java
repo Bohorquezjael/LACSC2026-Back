@@ -1,23 +1,22 @@
 package com.innovawebJT.lacsc.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.innovawebJT.lacsc.enums.PresentationModality;
 import com.innovawebJT.lacsc.enums.SpecialSessions;
 import com.innovawebJT.lacsc.enums.Status;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 
-@Data
-@NoArgsConstructor
+@Getter
+@Setter
+@RequiredArgsConstructor
 @AllArgsConstructor
 @Builder
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -57,6 +56,7 @@ public class Summary {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "presenter_user_id")
+    @JsonIgnore
     private User presenter;
 
     private LocalDateTime presentationDateTime;

@@ -1,10 +1,7 @@
 package com.innovawebJT.lacsc.util;
 
 import com.innovawebJT.lacsc.dto.*;
-import com.innovawebJT.lacsc.model.CourseEnrollment;
-import com.innovawebJT.lacsc.model.EmergencyContact;
-import com.innovawebJT.lacsc.model.Summary;
-import com.innovawebJT.lacsc.model.User;
+import com.innovawebJT.lacsc.model.*;
 
 public class Helpers {
 
@@ -17,13 +14,28 @@ public class Helpers {
 				.presentationModality(summary.getPresentationModality())
 				.summaryPayment(summary.getSummaryPayment())
 				.summaryStatus(summary.getSummaryStatus())
-				.authors(summary.getAuthors())
+				.authors(
+						summary.getAuthors()
+								.stream()
+								.map(Helpers::mapToAuthorDTO)
+								.toList()
+				)
 				.presenter(mapToResponseDTO(summary.getPresenter()))
 				.presentationDateTime(summary.getPresentationDateTime())
 				.presentationRoom(summary.getPresentationRoom())
 				.keyAbstract(summary.getKeyAbstract())
 				.referencePaymentFile(summary.getReferencePaymentFile())
 				.createdAt(summary.getCreatedAt())
+				.build();
+	}
+
+	public static AuthorDTO mapToAuthorDTO(Author author) {
+		return AuthorDTO.builder()
+				.id(author.getId())
+				.name(author.getName())
+				.email(author.getEmail())
+				.institutionName(author.getInstitutionName())
+				.authorOrder(author.getAuthorOrder())
 				.build();
 	}
 

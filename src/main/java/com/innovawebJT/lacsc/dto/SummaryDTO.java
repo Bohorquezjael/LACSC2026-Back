@@ -1,9 +1,9 @@
 package com.innovawebJT.lacsc.dto;
 
+import com.innovawebJT.lacsc.dto.UserProfileDTO;
 import com.innovawebJT.lacsc.enums.PresentationModality;
 import com.innovawebJT.lacsc.enums.SpecialSessions;
 import com.innovawebJT.lacsc.enums.Status;
-import com.innovawebJT.lacsc.model.Author;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
@@ -18,12 +18,11 @@ public record SummaryDTO(
 		PresentationModality presentationModality,
 		Status summaryPayment,
 		Status summaryStatus,
-		List<Author> authors,
+		List<AuthorDTO> authors,
 		UserProfileDTO presenter,
 		LocalDateTime presentationDateTime,
 		String presentationRoom,
 		String keyAbstract,
 		String referencePaymentFile,
 		LocalDateTime createdAt
-) {
-}
+) {}
