@@ -2,6 +2,8 @@ package com.innovawebJT.lacsc.repository;
 
 import com.innovawebJT.lacsc.dto.UserResponseDTO;
 import com.innovawebJT.lacsc.enums.SpecialSessions;
+import com.innovawebJT.lacsc.enums.Status;
+import com.innovawebJT.lacsc.model.Summary;
 import com.innovawebJT.lacsc.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,4 +40,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 //    Page<UserResponseDTO> findAllUsers(Pageable pageable);
 
     Optional<User> findByEmail(String email);
+
+    @Query("SELECT u.id, " +
+           "(SELECT COUNT(s) FROM Summary s WHERE s.presenter.id = u.id AND s.summaryPayment = :approvedStatus), " +
+           "(SELECT COUNT(s) FROM Summary s WHERE s.presenter.id = u.id) " +
+           "FROM User u WHERE u.id IN :ids")
+    List<Object[]> getSummaryCountsByUserIds(@Param("ids") List<Long> ids, @Param("approvedStatus") Status approvedStatus);
 }
