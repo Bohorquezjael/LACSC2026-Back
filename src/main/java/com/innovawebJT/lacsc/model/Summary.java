@@ -56,7 +56,6 @@ public class Summary {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "presenter_user_id")
-    @JsonIgnore
     private User presenter;
 
     private LocalDateTime presentationDateTime;
