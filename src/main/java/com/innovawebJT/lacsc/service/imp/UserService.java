@@ -1,9 +1,13 @@
     package com.innovawebJT.lacsc.service.imp;
 
+    import com.innovawebJT.lacsc.audit.Audit;
     import com.innovawebJT.lacsc.dto.CongressReviewDTO;
+    import com.innovawebJT.lacsc.dto.CourseCounterDTO;
+    import com.innovawebJT.lacsc.dto.CourseEnrollmentDTO;
     import com.innovawebJT.lacsc.dto.EmergencyContactDTO;
     import com.innovawebJT.lacsc.dto.UserProfileDTO;
     import com.innovawebJT.lacsc.dto.SummaryCounterDTO;
+    import com.innovawebJT.lacsc.dto.SummaryDTO;
     import com.innovawebJT.lacsc.dto.UserResponseDTO;
     import com.innovawebJT.lacsc.enums.FileCategory;
     import com.innovawebJT.lacsc.enums.Status;
@@ -38,11 +42,6 @@ import java.util.stream.Collectors;
 
     import static com.innovawebJT.lacsc.util.Helpers.mapToUserResponseDTO;
     import static com.innovawebJT.lacsc.util.Helpers.mapToResponseDTO;
-
-    @Slf4j
-    @Service
-    @AllArgsConstructor
-    public class UserService implements IUserService {
 
     @Slf4j
     @Service
@@ -551,8 +550,8 @@ import java.util.stream.Collectors;
                     .institution(user.getInstitution())
                     .category(user.getCategory())
                     .summariesReviewed(SummaryCounterDTO.builder()
-                            .approved(approvedCount)
-                            .total(totalCount)
+                            .approvedSummaries(approvedCount)
+                            .totalSummaries(totalCount)
                             .build())
                     .build();
         }
