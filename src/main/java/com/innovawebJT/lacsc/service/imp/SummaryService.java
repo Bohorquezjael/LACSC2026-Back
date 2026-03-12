@@ -112,6 +112,7 @@ public class SummaryService implements ISummaryService {
         throw new AccessDeniedException("No autorizado");
     }
 
+
     @Override
     public Page<SummaryDTO> getMine(Pageable pageable) {
         Long userId = authService.getCurrentUser().getId();

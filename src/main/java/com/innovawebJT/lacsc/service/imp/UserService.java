@@ -34,6 +34,10 @@
     import static com.innovawebJT.lacsc.util.Helpers.mapToUserResponseDTO;
     import static com.innovawebJT.lacsc.util.Helpers.mapToResponseDTO;
 
+    @Slf4j
+    @Service
+    @AllArgsConstructor
+    public class UserService implements IUserService {
 
     @Slf4j
     @Service
