@@ -14,6 +14,7 @@ public record UserResponseDTO(Long id,
                               Institution institution,
                               Status status,
 							  SummaryCounterDTO summariesReviewed,
-							  CourseCounterDTO courseReviewed
+							  CourseCounterDTO courseReviewed,
+							  EmergencyContactDTO emergencyContact
 							) {
 }

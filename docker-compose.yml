@@ -1,4 +1,15 @@
 services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: lacsc
+      POSTGRES_USER: lacsc
+      POSTGRES_PASSWORD: lacsc123
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
   keycloak:
     image: quay.io/keycloak/keycloak:latest
     environment:
@@ -11,6 +22,8 @@ services:
     command:
       - start-dev
       - --import-realm
-  
+    depends_on:
+      - postgres
+   
 volumes:
-  keycloak-data:
+  postgres-data:

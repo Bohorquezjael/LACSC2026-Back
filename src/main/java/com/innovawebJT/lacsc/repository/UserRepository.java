@@ -7,14 +7,25 @@ import com.innovawebJT.lacsc.model.Summary;
 import com.innovawebJT.lacsc.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
+@Repository
 public interface UserRepository extends JpaRepository<User, Long> {
+
+    @Query("SELECT u.id, u.name, u.surname, u.email, u.category, u.institution, u.status " +
+           "FROM User u")
+    Page<Object[]> findAllUsersProjection(Pageable pageable);
+
+    @EntityGraph(attributePaths = {"emergencyContact"})
+    @Query("SELECT u FROM User u")
+    Page<User> findAllUsersWithEmergencyContact(Pageable pageable);
 
     Optional<User> findByKeycloakId(String keycloakId);
 
@@ -24,6 +35,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT DISTINCT u FROM Summary s JOIN s.presenter u WHERE s.specialSession IN :sessions")
     Page<User> findUsersBySpecialSessions(@Param("sessions") List<SpecialSessions> sessions, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"emergencyContact"})
+    @Query("SELECT DISTINCT u FROM Summary s JOIN s.presenter u WHERE s.specialSession IN :sessions")
+    Page<User> findUsersBySpecialSessionsWithEmergencyContact(@Param("sessions") List<SpecialSessions> sessions, Pageable pageable);
+
+    @Query("SELECT DISTINCT u.id, u.name, u.surname, u.email, u.category, u.institution, u.status " +
+           "FROM Summary s JOIN s.presenter u WHERE s.specialSession IN :sessions")
+    Page<Object[]> findUsersBySpecialSessionsProjection(@Param("sessions") List<SpecialSessions> sessions, Pageable pageable);
 
 //    @Query("""
 //        SELECT new com.innovawebJT.lacsc.dto.UserResponseDTO(

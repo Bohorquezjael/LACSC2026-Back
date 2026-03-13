@@ -154,19 +154,28 @@ import java.util.stream.Collectors;
         @Override
         public Page<UserResponseDTO> getAll(Pageable pageable) {
             if (SecurityUtils.isAdminGeneral() || SecurityUtils.isAdminPagos() || SecurityUtils.isAdminRevision()) {
-                Page<User> usersPage = repository.findAll(pageable);
+                Page<User> usersPage = repository.findAllUsersWithEmergencyContact(pageable);
                 List<Long> userIds = usersPage.getContent().stream().map(User::getId).toList();
                 
-                Map<Long, int[]> summaryCounts = repository.getSummaryCountsByUserIds(userIds, Status.APPROVED).stream()
-                    .collect(Collectors.toMap(
-                        row -> (Long) row[0],
-                        row -> new int[] {(int) row[1], (int) row[2]}
-                    ));
+                final Map<Long, int[]> summaryCounts;
+                if (!userIds.isEmpty()) {
+                    summaryCounts = repository.getSummaryCountsByUserIds(userIds, Status.APPROVED).stream()
+                        .collect(Collectors.toMap(
+                            row -> (Long) row[0],
+                            row -> new int[] {((Number) row[1]).intValue(), ((Number) row[2]).intValue()}
+                        ));
+                } else {
+                    summaryCounts = new java.util.HashMap<>();
+                }
                 
-                return usersPage.map(user -> {
-                    int[] counts = summaryCounts.getOrDefault(user.getId(), new int[]{0, 0});
-                    return mapToUserResponseDTO(user, counts[0], counts[1]);
-                });
+                List<UserResponseDTO> dtos = usersPage.getContent().stream()
+                    .map(user -> {
+                        int[] counts = summaryCounts.getOrDefault(user.getId(), new int[]{0, 0});
+                        return mapToUserResponseDTOWithEmergencyContact(user, counts[0], counts[1]);
+                    })
+                    .toList();
+                
+                return new org.springframework.data.domain.PageImpl<>(dtos, pageable, usersPage.getTotalElements());
             }
 
             if (SecurityUtils.isAdminSesion()) {
@@ -175,19 +184,28 @@ import java.util.stream.Collectors;
                         SecurityUtils.getAllowedSessionsFromRoles();
 
                 if (!sessions.isEmpty()) {
-                    Page<User> usersPage = repository.findUsersBySpecialSessions(sessions, pageable);
+                    Page<User> usersPage = repository.findUsersBySpecialSessionsWithEmergencyContact(sessions, pageable);
                     List<Long> userIds = usersPage.getContent().stream().map(User::getId).toList();
                     
-                    Map<Long, int[]> summaryCounts = repository.getSummaryCountsByUserIds(userIds, Status.APPROVED).stream()
-                        .collect(Collectors.toMap(
-                            row -> (Long) row[0],
-                            row -> new int[] {(int) row[1], (int) row[2]}
-                        ));
+                    final Map<Long, int[]> summaryCounts;
+                    if (!userIds.isEmpty()) {
+                        summaryCounts = repository.getSummaryCountsByUserIds(userIds, Status.APPROVED).stream()
+                            .collect(Collectors.toMap(
+                                row -> (Long) row[0],
+                                row -> new int[] {((Number) row[1]).intValue(), ((Number) row[2]).intValue()}
+                            ));
+                    } else {
+                        summaryCounts = new java.util.HashMap<>();
+                    }
                     
-                    return usersPage.map(user -> {
-                        int[] counts = summaryCounts.getOrDefault(user.getId(), new int[]{0, 0});
-                        return mapToUserResponseDTO(user, counts[0], counts[1]);
-                    });
+                    List<UserResponseDTO> dtos = usersPage.getContent().stream()
+                        .map(user -> {
+                            int[] counts = summaryCounts.getOrDefault(user.getId(), new int[]{0, 0});
+                            return mapToUserResponseDTOWithEmergencyContact(user, counts[0], counts[1]);
+                        })
+                        .toList();
+                    
+                    return new org.springframework.data.domain.PageImpl<>(dtos, pageable, usersPage.getTotalElements());
                 }
             }
 
@@ -553,6 +571,27 @@ import java.util.stream.Collectors;
                             .approvedSummaries(approvedCount)
                             .totalSummaries(totalCount)
                             .build())
+                    .build();
+        }
+
+        private UserResponseDTO mapToUserResponseDTOWithEmergencyContact(User user, int approvedCount, int totalCount) {
+            EmergencyContactDTO emergencyContactDTO = null;
+            if (user.getEmergencyContact() != null) {
+                emergencyContactDTO = mapToResponseContactDTO(user.getEmergencyContact());
+            }
+            return UserResponseDTO.builder()
+                    .id(user.getId())
+                    .name(user.getName())
+                    .surname(user.getSurname())
+                    .email(user.getEmail())
+                    .status(user.getStatus())
+                    .institution(user.getInstitution())
+                    .category(user.getCategory())
+                    .summariesReviewed(SummaryCounterDTO.builder()
+                            .approvedSummaries(approvedCount)
+                            .totalSummaries(totalCount)
+                            .build())
+                    .emergencyContact(emergencyContactDTO)
                     .build();
         }
 
